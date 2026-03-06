@@ -1,4 +1,4 @@
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 
 const quotationSchema = new mongoose.Schema({
     rfq:{
@@ -13,11 +13,13 @@ const quotationSchema = new mongoose.Schema({
     },
     price:{
         type:Number,
-        required:true
+        required:true,
+        min:1
     },
     deliveryTime:{
         type:Number,
-        required:true
+        required:true,
+        min:1
     },
     message:{
         type:String
@@ -28,6 +30,6 @@ const quotationSchema = new mongoose.Schema({
         default:"pending"
     }
 },{timestamps:true})
-
+quotationSchema.index({ rfq: 1, vendor: 1 }, { unique: true });
 const Quotation = mongoose.model("Quotation",quotationSchema);
 export default Quotation;

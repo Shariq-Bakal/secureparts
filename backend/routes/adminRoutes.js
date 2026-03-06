@@ -1,5 +1,5 @@
 import express from "express";
-import { approveVendor, getPendingVendors } from "../controllers/admin/adminController.js";
+import { approveVendor, getPendingVendors, getDashboardStats } from "../controllers/admin/adminController.js";
 import {
    verifyAccessToken,
    verifyRole
@@ -13,5 +13,6 @@ router.get(
   verifyRole("admin"),
   getPendingVendors
 );
+router.get("/dashboard",verifyAccessToken,verifyRole("admin"),getDashboardStats)
 router.patch("/approve-vendor/:id",verifyAccessToken,verifyRole("admin"),approveVendor)
 export default router

@@ -49,8 +49,9 @@ export const verifyAccessToken= async (req, res, next) => {
 
 
 export const verifyRole = (requiredRole) => {
-
+ 
    return (req, res, next) => {
+    console.log(req.user.role,"role")
 
       if (req.user.role !== requiredRole) {
          return res.status(403).json({
