@@ -173,41 +173,84 @@ export const getDashboardStats = async (req, res) => {
 // GET /admin/rfqs
 // GET /admin/quotations
 
-export const getRecentRFQS = async (req,res)=>{
-    try{
+export const getRecentRFQS = async (req, res) => {
+    try {
+
         const limit = Number(req.query.limit)
-        if(limit>10){
-            return res.status(400).json({
-                success:false,
-                message:"Limit should less than 11"
-            })
-        }
         const page = Number(req.query.page)
-        if(Number.isNaN(page) || Number.isNaN(limit)){
-            return res.status(401).json({
-                success:false,
-                message:"Please add page and limit"
+
+        // 1️⃣ Check if values exist and are numbers
+        if (Number.isNaN(page) || Number.isNaN(limit)) {
+            return res.status(400).json({
+                success: false,
+                message: "Please add valid page and limit"
             })
         }
+
+        // 2️⃣ Limit validation
+        if (limit > 10 || limit < 1) {
+            return res.status(400).json({
+                success: false,
+                message: "Limit must be between 1 and 10"
+            })
+        }
+
+        // 3️⃣ Page validation
+        if (page < 1) {
+            return res.status(400).json({
+                success: false,
+                message: "Page must be greater than 0"
+            })
+        }
+
         const skip = (page - 1) * limit
 
-        const recentRFQS = await RFQ.find().sort({createdAt:-1}).skip(skip).limit(limit)
-        res.status(200).json({
-            success:true,
-            recentRFQS
-        })   
-    }
-    catch(error){
-        console.log(error.message);
+        const recentRFQS = await RFQ
+            .find()
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean()
+
+        return res.status(200).json({
+            success: true,
+            data: recentRFQS
+        })
+
+    } catch (error) {
+        console.log(error.message)
         return res.status(500).json({
-            success:false,
-            message:"Internal Server error"
+            success: false,
+            message: "Internal Server error"
         })
     }
 }
+
 export const getRecentQuotations = async (req,res)=>{
     try{
-        const recentQuotations = await Quotation.find().sort({createdAt:-1}).limit(5);
+        const limit = Number(req.query.limit);
+        const page = Number(req.query.page);
+
+        if(Number.isNaN(page) || Number.isNaN(limit)){
+            return res.status(400).json( {
+                success:false,
+                message:"Please add valid page number and limit"
+            })
+        }
+        if(page<1){
+            return res.status(400).json({
+                success:false,
+                message:"Page number must be greater than 0"
+            })
+        }
+        if(limit>10 || limit<1){
+            return res.status(400).json({
+                success:false,
+                message:"Limit should be between 1 to 10"
+            })
+        }
+        const skip = (page-1) * limit
+        const recentQuotations = await Quotation.find().sort({createdAt:-1}).skip(skip).limit(limit).lean();
         return res.status(200).json({
             success:true,
             recentQuotations
@@ -222,55 +265,196 @@ export const getRecentQuotations = async (req,res)=>{
         })
     }
 }
-export const getAllUsers = async (req,res)=>{
-    try{
-        const users = await User.find().limit(10);
+export const getAllUsers = async (req, res) => {
+    try {
+        const page = Number(req.query.page);
+        const limit = Number(req.query.limit);
+
+        if (Number.isNaN(page) || Number.isNaN(limit)) {
+            return res.status(400).json({
+                success: false,
+                message: "Please send valid page or limit"
+            });
+        }
+
+        if (page < 1) {
+            return res.status(400).json({
+                success: false,
+                message: "Page must be greater than 0"
+            });
+        }
+
+        if (limit < 1 || limit > 10) {
+            return res.status(400).json({
+                success: false,
+                message: "Limit must be between 1 to 10"
+            });
+        }
+
+        const skip = (page - 1) * limit;
+
+        const users = await User.find()
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
         res.status(200).json({
-            success:true,
+            success: true,
             users
-        })
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
-    catch(error){
-        console.log(error.message);
-        return res.status(500).json({
-            success:false,
-            message:"Internal Server error"
-        })
-    }
-}
+};
 
 
-export const getAllRFQS = async (req,res)=>{
-    try{
-        const rfqs = await RFQ.find().limit(10);
+export const getAllRFQS = async (req, res) => {
+    try {
+        const page = Number(req.query.page);
+        const limit = Number(req.query.limit);
+
+        if (Number.isNaN(page) || Number.isNaN(limit)) {
+            return res.status(400).json({
+                success: false,
+                message: "Please send valid page or limit"
+            });
+        }
+
+        if (page < 1) {
+            return res.status(400).json({
+                success: false,
+                message: "Page must be greater than 0"
+            });
+        }
+
+        if (limit < 1 || limit > 10) {
+            return res.status(400).json({
+                success: false,
+                message: "Limit must be between 1 to 10"
+            });
+        }
+
+        const skip = (page - 1) * limit;
+
+        const rfqs = await RFQ.find()
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        const totalRFQS = await RFQ.countDocuments();
+
         res.status(200).json({
-            success:true,
+            success: true,
+            page,
+            limit,
+            totalRFQS,
+            totalPages: Math.ceil(totalRFQS / limit),
             rfqs
-        })
+        });
 
-    }
-    catch(error){
+    } catch (error) {
         console.log(error.message);
         return res.status(500).json({
-            success:false,
-            message:"Internal Server error"
-        })
+            success: false,
+            message: "Internal Server Error"
+        });
     }
-}
+};
 
-export const getAllQuotations = async (req,res)=>{
-    try{
-        const quotations = await Quotation.find().limit(10);
+export const getAllQuotations = async (req, res) => {
+    try {
+        const page = Number(req.query.page);
+        const limit = Number(req.query.limit);
+
+        if (Number.isNaN(page) || Number.isNaN(limit)) {
+            return res.status(400).json({
+                success: false,
+                message: "Please send valid page or limit"
+            });
+        }
+
+        if (page < 1) {
+            return res.status(400).json({
+                success: false,
+                message: "Page must be greater than 0"
+            });
+        }
+
+        if (limit < 1 || limit > 10) {
+            return res.status(400).json({
+                success: false,
+                message: "Limit must be between 1 to 10"
+            });
+        }
+
+        const skip = (page - 1) * limit;
+
+        const quotations = await Quotation.find()
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        const totalQuotations = await Quotation.countDocuments();
+
         res.status(200).json({
-            success:true,
+            success: true,
+            page,
+            limit,
+            totalQuotations,
+            totalPages: Math.ceil(totalQuotations / limit),
             quotations
-        })
-    }
-    catch(error){
+        });
+
+    } catch (error) {
         console.log(error.message);
         return res.status(500).json({
-            success:false,
-            message:"Internal Server error"
-        })
+            success: false,
+            message: "Internal Server Error"
+        });
     }
-}
+};
+
+
+//Deleting a user
+
+export const deleteUser = async (req, res) => {
+    try {
+
+        const id = req.params.id;   // id should come from params
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide a valid user id"
+            });
+        }
+
+        const user = await User.findByIdAndDelete(id);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "User deleted successfully"
+        });
+
+    } catch (error) {
+        console.log(error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+};
