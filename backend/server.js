@@ -6,15 +6,19 @@ import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import rfqRoutes from "./routes/rfqRoutes.js"
 import quotationRoutes from "./routes/quotationRoutes.js"
+import cors from "cors"
 const app = express();
 
 dotenv.config();
 const port = process.env.PORT || 5000;
 
+app.use(cors()); 
+app.use(express.json()); //Converts data into json
+app.use(express.urlencoded({ extended: true }));
 
 // Connect to MongoDB
 connectDB();
-app.use(express.json()); //Converts data into json
+
 
 // 🔹 Basic Route
 app.use("/api/auth", authRoutes ); //endpoint would be POST http://localhost:5000/api/admin/register
