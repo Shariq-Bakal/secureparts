@@ -16,10 +16,8 @@ function Login(){
         email,
         password
     }))
-    console.log({
-      email,
-      password
-    })
+    setEmail("")
+    setPassword("")
   }
 
   return(

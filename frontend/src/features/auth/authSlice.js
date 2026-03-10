@@ -5,32 +5,23 @@ import { loginUser, registerUser } from "../../services/authService"
 // ============================
 // REGISTER THUNK
 // ============================
+
 export const register = createAsyncThunk(
-
   "auth/register",
-
   async (data, thunkAPI) => {
+    try {
 
-    try{
-
-      // call API function
       const response = await registerUser(data)
-
       console.log("REGISTER RESPONSE:", response)
 
-      // return response to reducer
       return response
 
-    }
-    catch(error){
+    } catch (error) {
 
-      // send backend error to redux state
       return thunkAPI.rejectWithValue(error.response.data)
 
     }
-
   }
-
 )
 
 
@@ -39,29 +30,32 @@ export const register = createAsyncThunk(
 // ============================
 
 export const login = createAsyncThunk(
-
   "auth/login",
-
   async (data, thunkAPI) => {
 
-    try{
+    try {
 
       const response = await loginUser(data)
-
       console.log("LOGIN RESPONSE:", response)
 
       return response
 
-    }
-    catch(error){
+    } catch (error) {
 
       return thunkAPI.rejectWithValue(error.response.data)
 
     }
 
   }
-
 )
+
+
+// ============================
+// LOAD DATA FROM LOCAL STORAGE
+// ============================
+
+const token = localStorage.getItem("token")
+const user = JSON.parse(localStorage.getItem("user"))
 
 
 // ============================
@@ -70,8 +64,8 @@ export const login = createAsyncThunk(
 
 const initialState = {
 
-  user: null,
-  token: null,
+  user: user || null,
+  token: token || null,
   loading: false,
   error: null
 
@@ -84,83 +78,101 @@ const initialState = {
 
 const authSlice = createSlice({
 
-  name:"auth",
+  name: "auth",
 
   initialState,
 
-  reducers:{
+  reducers: {
 
-    // logout reducer
-    logout:(state)=>{
+    logout: (state) => {
 
       state.user = null
       state.token = null
+
+      localStorage.removeItem("token")
+      localStorage.removeItem("user")
 
     }
 
   },
 
-  // handle async thunk states
-  extraReducers:(builder)=>{
+
+  extraReducers: (builder) => {
 
     builder
 
-    // ------------------
-    // LOGIN STATES
-    // ------------------
+      // =========================
+      // LOGIN
+      // =========================
 
-    .addCase(login.pending,(state)=>{
-      state.loading = true
-    })
+      .addCase(login.pending, (state) => {
 
-    .addCase(login.fulfilled,(state,action)=>{
+        state.loading = true
+        state.error = null
 
-      state.loading = false
+      })
 
-      // store user in redux
-      state.user = action.payload.user
+      .addCase(login.fulfilled, (state, action) => {
 
-      // store token in redux
-      state.token = action.payload.token
+        state.loading = false
+        console.log(action.payload.user)
 
-    })
+        state.user = action.payload.user
+        state.token = action.payload.accessToken
 
-    .addCase(login.rejected,(state,action)=>{
-      state.loading = false
-      state.error = action.payload
-    })
+        // store in localStorage
+        localStorage.setItem("token", action.payload.accessToken)
+        localStorage.setItem("user", JSON.stringify(action.payload.user))
+
+      })
+
+      .addCase(login.rejected, (state, action) => {
+
+        state.loading = false
+        state.error = action.payload
+
+      })
 
 
-    // ------------------
-    // REGISTER STATES
-    // ------------------
+      // =========================
+      // REGISTER
+      // =========================
 
-    .addCase(register.pending,(state)=>{
-      state.loading = true
-    })
+      .addCase(register.pending, (state) => {
 
-    .addCase(register.fulfilled,(state,action)=>{
+        state.loading = true
+        state.error = null
 
-      state.loading = false
+      })
 
-      // backend usually returns user + token
-      state.user = action.payload.user
-      state.token = action.payload.token
+      .addCase(register.fulfilled, (state, action) => {
 
-    })
+        state.loading = false
 
-    .addCase(register.rejected,(state,action)=>{
-      state.loading = false
-      state.error = action.payload
-    })
+        state.user = action.payload.user
+        state.token = action.payload.accessToken
+
+        localStorage.setItem("token", action.payload.accessToken)
+        localStorage.setItem("user", JSON.stringify(action.payload.user))
+
+      })
+
+      .addCase(register.rejected, (state, action) => {
+
+        state.loading = false
+        state.error = action.payload
+
+      })
 
   }
 
 })
 
 
-// export logout action
+// ============================
+// EXPORTS
+// ============================
+
 export const { logout } = authSlice.actions
 
-// export reducer
 export default authSlice.reducer
