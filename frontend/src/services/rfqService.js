@@ -17,3 +17,17 @@ export const createRFQ = async (data) => {
 
   return response.data
 }
+
+export const getRfqs = async (page) => {
+
+  const token = localStorage.getItem("token")
+
+  const response = await api.get(`/user/rfqs?page=${page}`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+  console.log(response.data)
+
+  return response.data
+}

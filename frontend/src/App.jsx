@@ -5,6 +5,8 @@ import Profile from "./pages/user/Profile"
 import ProtectedRoute from "./routes/ProtectedRoute"
 import RoleBasedDashboard from "./pages/dash-board/RoleBasedDashboard"
 import CreateRfq from "./pages/rfq/CreateRfq"
+import RFQList from "./pages/rfq/RfqList"
+import { Home } from "lucide-react"
 function App() {
 
   return (
@@ -26,7 +28,10 @@ function App() {
             <CreateRfq/>
             </ProtectedRoute>
           }/>
+          <Route path = "/rfqs" element={<RFQList/>}/>
+          <Route path = "/" element={<Home/>}/>
         </Routes>
+        
     </BrowserRouter>
   )
 }

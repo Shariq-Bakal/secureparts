@@ -68,3 +68,58 @@ export const getOpenRFQ = async(req,res)=>{
         });
     }
 }
+export const getAllRfq = async (req, res) => {
+  try {
+
+    const page = Number(req.query.page);
+
+    if (Number.isNaN(page)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid page number"
+      });
+    }
+
+    if (page < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Page number should be greater than 0"
+      });
+    }
+
+    const limit = 10; // fixed records per page
+    const skip = (page - 1) * limit;
+
+    const [rfqs, total] = await Promise.all([
+      RFQ.find()
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+
+      RFQ.countDocuments()
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+    console.log(rfqs)
+
+    return res.status(200).json({
+      success: true,
+      data: rfqs,
+      pagination: {
+        totalRecords: total,
+        totalPages: totalPages,
+        currentPage: page,
+        limit: limit
+      }
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+
+  }
+};

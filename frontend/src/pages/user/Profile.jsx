@@ -1,6 +1,9 @@
 import DashboardLayout from "../../layouts/DashboardLayout"
+import { useSelector } from "react-redux"
 
 const Profile = () => {
+  const user = useSelector((state)=>state.auth.user);
+  console.log(user)
   return (
     <DashboardLayout>
 
@@ -8,7 +11,7 @@ const Profile = () => {
 
         {/* Page Title */}
         <h1 className="text-2xl font-bold mb-6">
-          My Profile
+          {user.name}
         </h1>
 
         {/* Profile Card */}
@@ -18,21 +21,21 @@ const Profile = () => {
 
             {/* Avatar */}
             <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-3xl font-bold text-gray-600">
-              M
+              {user.name[0]}
             </div>
 
             {/* User Info */}
             <div>
               <h2 className="text-xl font-semibold">
-                Madiha
+                {user.name}
               </h2>
 
               <p className="text-gray-500">
-                madiha@gmail.com
+                {user.email}
               </p>
 
               <span className="mt-2 inline-block bg-indigo-100 text-indigo-600 text-sm px-3 py-1 rounded-full">
-                Customer
+                {user.role}
               </span>
             </div>
 
@@ -52,17 +55,17 @@ const Profile = () => {
 
             <div>
               <p className="text-gray-500 text-sm">Full Name</p>
-              <p className="font-medium">Madiha</p>
+              <p className="font-medium">{user.name}</p>
             </div>
 
             <div>
               <p className="text-gray-500 text-sm">Email</p>
-              <p className="font-medium">madiha@gmail.com</p>
+              <p className="font-medium">{user.email}</p>
             </div>
 
             <div>
               <p className="text-gray-500 text-sm">Role</p>
-              <p className="font-medium">Customer</p>
+              <p className="font-medium">{user.role}</p>
             </div>
 
             <div>

@@ -1,62 +1,53 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
-import { createRFQ } from "../../services/rfqService"
+import { createRFQ, getRfqs } from "../../services/rfqService"
 
-
-// ============================
-// CREATE RFQ THUNK
-// ============================
+// CREATE RFQ
 
 export const createRfq = createAsyncThunk(
   "rfq/create",
   async (data, thunkAPI) => {
     try {
-
       const response = await createRFQ(data)
-
-      return response.data
-
+      console.log(response,"response")
+      return response
     } catch (error) {
-
       return thunkAPI.rejectWithValue(
         error.response?.data || error.message
       )
-
     }
   }
 )
 
+// GET RFQS
 
-// ============================
-// LOAD DATA FROM LOCAL STORAGE
-// ============================
+export const getRfq = createAsyncThunk(
+  "rfq/get",
+  async (page, thunkAPI) => {
+    try {
+      const response = await getRfqs(page)
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data || error.message
+      )
+    }
+  }
+)
 
-const token = localStorage.getItem("token")
-
-
-// ============================
 // INITIAL STATE
-// ============================
 
 const initialState = {
-  token: token || null,
   loading: false,
   error: null,
-  rfq: null
+  rfqs: []
 }
 
-
-// ============================
 // SLICE
-// ============================
 
 const rfqSlice = createSlice({
-
   name: "rfq",
-
   initialState,
-
   reducers: {},
-
   extraReducers: (builder) => {
 
     builder
@@ -70,7 +61,7 @@ const rfqSlice = createSlice({
 
       .addCase(createRfq.fulfilled, (state, action) => {
         state.loading = false
-        state.rfq = action.payload
+        state.rfqs.push(action.payload)
       })
 
       .addCase(createRfq.rejected, (state, action) => {
@@ -78,8 +69,23 @@ const rfqSlice = createSlice({
         state.error = action.payload
       })
 
-  }
+      // GET RFQS
 
+      .addCase(getRfq.pending, (state) => {
+        state.loading = true
+      })
+
+      .addCase(getRfq.fulfilled, (state, action) => {
+        state.loading = false
+        state.rfqs = action.payload.data
+      })
+
+      .addCase(getRfq.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+      })
+
+  }
 })
 
 export default rfqSlice.reducer
