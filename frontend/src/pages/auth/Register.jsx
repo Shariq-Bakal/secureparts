@@ -10,20 +10,18 @@ function Login(){
   const [email,setEmail] = useState("")
   const [password,setPassword] = useState("")
   const [name,setName] = useState("")
+  const [role,setRole] = useState("customer")
   const dispatch = useDispatch()
 
   const handleSubmit = (e)=>{
+    console.log(email,password,name,role)
     e.preventDefault()
     dispatch(register({
       email,
       password,
-      name
-    }))
-    console.log({
-      email,
-      password,
+      name,
       role
-    })
+    }))
   }
 
   return(
@@ -57,6 +55,16 @@ function Login(){
             value={name}
             onChange={(e)=>setName(e.target.value)}
           />
+          <select
+            id="Roles"
+            name="Roles"
+            className="w-full p-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+          >
+            <option value="vendor">Vendor</option>
+            <option value="customer">Customer</option>
+          </select>
 
           <Button>
             REGISTER

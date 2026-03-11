@@ -4,6 +4,7 @@ import Register from "./pages/auth/Register"
 import Profile from "./pages/user/Profile"
 import ProtectedRoute from "./routes/ProtectedRoute"
 import RoleBasedDashboard from "./pages/dash-board/RoleBasedDashboard"
+import CreateRfq from "./pages/rfq/CreateRfq"
 function App() {
 
   return (
@@ -16,12 +17,15 @@ function App() {
             <ProtectedRoute>
             <Profile /> 
             </ProtectedRoute>} />
-
-            <Route path="/dashboard" element={
+          <Route path="/dashboard" element={
             <ProtectedRoute>
             <RoleBasedDashboard />
             </ProtectedRoute>} />
-
+          <Route path = "/createrfq" element={
+            <ProtectedRoute>
+            <CreateRfq/>
+            </ProtectedRoute>
+          }/>
         </Routes>
     </BrowserRouter>
   )
