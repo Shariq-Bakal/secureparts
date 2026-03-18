@@ -1,122 +1,270 @@
 import DashboardLayout from "../../layouts/DashboardLayout"
+import { useSelector, useDispatch } from "react-redux"
+import { useEffect, useState } from "react"
+import { getStats, getAllUsers, getRFQs, getAllPendingVendors } from "../../features/admin/adminSlice"
 
 const AdminDashboard = () => {
+
+  const dispatch = useDispatch()
+
+  const { stats, users, rfqs, loading, pendingVendors } = useSelector((state) => state.admin)
+
+  const [activeTab, setActiveTab] = useState("users")
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const itemsPerPage = 5
+
+  // =============================
+  // Fetch data
+  // =============================
+
+  useEffect(() => {
+
+    dispatch(getStats())
+    dispatch(getRFQs(currentPage))
+    dispatch(getAllUsers(currentPage))
+    dispatch(getAllPendingVendors(currentPage))
+
+  }, [dispatch, currentPage])
+  console.log(pendingVendors,"pendingVendors")
+
+
+  // =============================
+  // Dummy Vendors
+  // =============================
+
+  const vendors = Array.from({ length: 12 }, (_, i) => ({
+    id: i + 1,
+    company: `Vendor ${i + 1}`,
+    email: `vendor${i + 1}@company.com`,
+    location: ["USA", "UK", "Canada", "Australia", "Germany"][i % 5],
+    status: i % 3 === 0 ? "pending" : "approved"
+  }))
+
+
+
+  // =============================
+  // Table Data
+  // =============================
+
+  const tableData =
+    activeTab === "users"
+      ? users?.users || []
+      : activeTab === "rfqs"
+      ? rfqs || []
+      : vendors.filter((v) => v.status === "pending")
+
+
+
+  // =============================
+  // Pagination
+  // =============================
+
+  const totalPages =
+    activeTab === "users"
+      ? users?.totalPages || 1
+      : Math.ceil(tableData.length / itemsPerPage)
+
+  const startIndex = (currentPage - 1) * itemsPerPage
+
+  const paginatedData =
+    activeTab === "users"
+      ? tableData
+      : tableData.slice(startIndex, startIndex + itemsPerPage)
+
+
+
+  // =============================
+  // Tab Change
+  // =============================
+
+  const handleTabChange = (tab) => {
+
+    setActiveTab(tab)
+    setCurrentPage(1)
+
+    if (tab === "users") dispatch(getAllUsers(1))
+    if (tab === "rfqs") dispatch(getRFQs())
+
+  }
+
+
+
+  // =============================
+  // Pagination Actions
+  // =============================
+
+  const handleNext = () => {
+
+    if (currentPage < totalPages) {
+    setCurrentPage((p) => p + 1)
+  }
+
+  }
+
+  const handlePrev = () => {
+
+    setCurrentPage((p) => Math.max(1, p - 1))
+
+  }
+
+
+
   return (
 
     <DashboardLayout>
 
-      <div className="p-8 space-y-10 bg-gray-50 min-h-screen">
+      <div className="min-h-screen bg-gray-50 p-6 lg:p-10">
 
-        {/* Header */}
-        <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-gray-800 mb-8">
+          Admin Dashboard
+        </h1>
 
-          <h1 className="text-3xl font-bold text-gray-800">
-            Admin Dashboard
-          </h1>
-
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow">
-            Platform Settings
-          </button>
-
-        </div>
 
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
-          <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-            <p className="text-gray-500 text-sm">Total Users</p>
-            <h2 className="text-3xl font-bold mt-2 text-blue-600">128</h2>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 
-          <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-            <p className="text-gray-500 text-sm">Total Vendors</p>
-            <h2 className="text-3xl font-bold mt-2 text-purple-600">42</h2>
-          </div>
+          <StatCard label="Total Users" value={stats?.totalUsers || 0} />
 
-          <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-            <p className="text-gray-500 text-sm">Total RFQs</p>
-            <h2 className="text-3xl font-bold mt-2 text-green-600">76</h2>
-          </div>
+          <StatCard label="Total RFQs" value={stats?.totalRFQs || 0} />
 
-          <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-            <p className="text-gray-500 text-sm">Quotes Submitted</p>
-            <h2 className="text-3xl font-bold mt-2 text-orange-500">210</h2>
-          </div>
+          <StatCard label="Accepted Quotes" value={stats?.acceptedQuotations || 0} />
+
+          <StatCard label="Total Quotes" value={stats?.totalQuotations || 0} />
 
         </div>
 
 
-        {/* Recent Users */}
-        <div className="bg-white rounded-xl shadow">
 
-          <div className="p-6 border-b">
-            <h2 className="text-xl font-semibold text-gray-700">
-              Recent Users
-            </h2>
-          </div>
+        {/* Tabs */}
+
+        <div className="flex gap-4 mb-6">
+
+          <TabButton
+            label="Users"
+            active={activeTab === "users"}
+            onClick={() => handleTabChange("users")}
+          />
+
+          <TabButton
+            label="RFQs"
+            active={activeTab === "rfqs"}
+            onClick={() => handleTabChange("rfqs")}
+          />
+
+          <TabButton
+            label="Pending Vendors"
+            active={activeTab === "vendors"}
+            onClick={() => handleTabChange("vendors")}
+          />
+
+        </div>
+
+
+
+        {/* Table */}
+
+        <div className="bg-white rounded-xl shadow overflow-hidden">
 
           <div className="overflow-x-auto">
 
-            <table className="w-full text-left">
+            <table className="min-w-full text-sm">
 
-              <thead className="bg-gray-100 text-gray-600 text-sm">
-                <tr>
-                  <th className="p-4">Name</th>
-                  <th className="p-4">Email</th>
-                  <th className="p-4">Role</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4">Action</th>
-                </tr>
+              <thead className="bg-gray-100 text-gray-600 text-xs uppercase">
+
+                {activeTab === "users" && (
+
+                  <tr>
+
+                    <th className="px-6 py-3 text-left">Name</th>
+                    <th className="px-6 py-3 text-left">Email</th>
+                    <th className="px-6 py-3 text-left">Role</th>
+
+                  </tr>
+
+                )}
+
+                {activeTab === "rfqs" && (
+
+                  <tr>
+
+                    <th className="px-6 py-3 text-left">Part Name</th>
+
+                    <th className="px-6 py-3 text-left">Customer</th>
+                    <th className="px-6 py-3 text-left">Quantity</th>
+                    <th className="px-6 py-3 text-left">Status</th>
+                    <th className="px-6 py-3 text-left">Category</th>
+                     <th className="px-6 py-3 text-left">Deadline</th>
+                  </tr>
+
+                )}
+
+                {activeTab === "vendors" && (
+
+                  <tr>
+
+                    <th className="px-6 py-3 text-left">Company</th>
+                    <th className="px-6 py-3 text-left">Email</th>
+                    <th className="px-6 py-3 text-left">Location</th>
+
+                  </tr>
+
+                )}
+
               </thead>
 
-              <tbody>
 
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium">John Smith</td>
-                  <td className="p-4">john@example.com</td>
-                  <td className="p-4">
-                    <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs">
-                      Customer
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs">
-                      Active
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <button className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">
-                      Block
-                    </button>
-                  </td>
-                </tr>
 
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium">Metal Supply Co</td>
-                  <td className="p-4">vendor@example.com</td>
-                  <td className="p-4">
-                    <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs">
-                      Vendor
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs">
-                      Pending
-                    </span>
-                  </td>
-                  <td className="p-4 space-x-2">
+              <tbody className="divide-y">
 
-                    <button className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded">
-                      Approve
-                    </button>
+                {loading ? (
 
-                    <button className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">
-                      Reject
-                    </button>
+                  <tr>
+                    <td colSpan="4" className="text-center py-6">
+                      Loading...
+                    </td>
+                  </tr>
 
-                  </td>
-                </tr>
+                ) : paginatedData.map((item, i) => (
+
+                  activeTab === "users" ? (
+
+                    <tr key={item._id || i}>
+
+                      <td className="px-6 py-4">{item.name}</td>
+                      <td className="px-6 py-4">{item.email}</td>
+                      <td className="px-6 py-4">{item.role}</td>
+
+                    </tr>
+
+                  ) : activeTab === "rfqs" ? (
+
+                    <tr key={item._id || i}>
+
+                      <td className="px-6 py-4">{item.partName}</td>
+                      <td className="px-6 py-4">{item.createdBy.name}</td>
+                      <td className="px-6 py-4">{item.quantity}</td>
+                      <td className="px-6 py-4">{item.status}</td>
+                      <td className="px-6 py-4">{item.category}</td>
+                      <td className="px-6 py-4">{item.deadline}</td>
+
+                    </tr>
+
+                  ) : (
+
+                    <tr key={item.id}>
+
+                      <td className="px-6 py-4">{item.company}</td>
+                      <td className="px-6 py-4">{item.email}</td>
+                      <td className="px-6 py-4">{item.location}</td>
+
+                    </tr>
+
+                  )
+
+                ))}
 
               </tbody>
 
@@ -124,58 +272,33 @@ const AdminDashboard = () => {
 
           </div>
 
-        </div>
 
 
-        {/* Recent RFQs */}
-        <div className="bg-white rounded-xl shadow">
+          {/* Pagination */}
 
-          <div className="p-6 border-b">
-            <h2 className="text-xl font-semibold text-gray-700">
-              Recent RFQs
-            </h2>
-          </div>
+          <div className="flex justify-between items-center p-4 border-t">
 
-          <div className="overflow-x-auto">
+            <span>
+              Page {currentPage} of {totalPages}
+            </span>
 
-            <table className="w-full text-left">
+            <div className="flex gap-2">
 
-              <thead className="bg-gray-100 text-gray-600 text-sm">
-                <tr>
-                  <th className="p-4">Product</th>
-                  <th className="p-4">Customer</th>
-                  <th className="p-4">Quantity</th>
-                  <th className="p-4">Status</th>
-                </tr>
-              </thead>
+              <button
+                onClick={handlePrev}
+                className="px-3 py-1 border rounded"
+              >
+                Previous
+              </button>
 
-              <tbody>
+              <button
+                onClick={handleNext}
+                className="px-3 py-1 border rounded"
+              >
+                Next
+              </button>
 
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium">Steel Pipes</td>
-                  <td className="p-4">John Smith</td>
-                  <td className="p-4">500</td>
-                  <td className="p-4">
-                    <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs">
-                      Open
-                    </span>
-                  </td>
-                </tr>
-
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium">Copper Wires</td>
-                  <td className="p-4">Alex Johnson</td>
-                  <td className="p-4">200</td>
-                  <td className="p-4">
-                    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs">
-                      Closed
-                    </span>
-                  </td>
-                </tr>
-
-              </tbody>
-
-            </table>
+            </div>
 
           </div>
 
@@ -186,6 +309,38 @@ const AdminDashboard = () => {
     </DashboardLayout>
 
   )
+
 }
+
+
+
+const StatCard = ({ label, value }) => (
+
+  <div className="bg-white p-6 rounded-xl shadow">
+
+    <p className="text-gray-500 text-sm">{label}</p>
+
+    <h2 className="text-3xl font-bold text-blue-600">
+      {value}
+    </h2>
+
+  </div>
+
+)
+
+
+
+const TabButton = ({ label, active, onClick }) => (
+
+  <button
+    onClick={onClick}
+    className={`px-4 py-2 rounded-lg text-sm ${
+      active ? "bg-blue-600 text-white" : "bg-white border"
+    }`}
+  >
+    {label}
+  </button>
+
+)
 
 export default AdminDashboard

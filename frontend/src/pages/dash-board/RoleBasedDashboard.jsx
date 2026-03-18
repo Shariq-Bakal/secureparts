@@ -1,6 +1,7 @@
 import { useSelector } from "react-redux"
 import CustomerBasedDashboard from "./CustomerBasedDashboard"
 import VendorBasedDashboard from "./VendorBasedDashboard"
+import AdminDashboard from "./AdminBasedDashboard"
 
 const RoleBasedDashboard = () => {
 
@@ -10,7 +11,7 @@ const RoleBasedDashboard = () => {
   if (!user) return <div>Loading...</div>
 
   if (user.role === "admin") {
-    return <div>Admin Dashboard</div>
+    return <AdminDashboard/>
   }
 
   if (user.role === "customer") {
