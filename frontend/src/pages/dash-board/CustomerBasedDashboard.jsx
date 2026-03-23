@@ -1,10 +1,25 @@
 import DashboardLayout from "../../layouts/DashboardLayout"
 import { useNavigate } from "react-router-dom"
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { getCustRFqs } from "../../features/rfq/rfqSlice";
+import { useEffect } from "react";
 
 const CustomerBasedDashboard = () => {
   const navigate = useNavigate();
   const navigateToCreateRFQ = ()=>{
     navigate("/createrfq")
+  }
+  const {customerRfqs} = useSelector((state)=>state.rfq)
+  console.log(customerRfqs,"sfdsfdsff")
+  const dispatch = useDispatch();
+  console.log(customerRfqs)
+  useEffect(()=>{
+    dispatch(getCustRFqs({ page: 1, limit: 5 }))
+  },[dispatch])
+
+  const approveVendor = ()=>{
+    console.log("Vendor approved successfully")
   }
   return (
 
@@ -25,6 +40,7 @@ const CustomerBasedDashboard = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          
 
           <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
             <p className="text-gray-500 text-sm">My RFQs</p>
@@ -49,60 +65,64 @@ const CustomerBasedDashboard = () => {
         </div>
 
 
-        {/* My RFQs */}
-        <div className="bg-white rounded-xl shadow">
+       {/* My RFQs */}
+{customerRfqs && customerRfqs.length > 0 ? (
+  <div className="bg-white rounded-xl shadow">
 
-          <div className="flex justify-between items-center p-6 border-b">
-            <h2 className="text-xl font-semibold text-gray-700">
-              My RFQs
-            </h2>
-          </div>
+    <div className="flex justify-between items-center p-6 border-b">
+      <h2 className="text-xl font-semibold text-gray-700">
+        My RFQs
+      </h2>
+    </div>
 
-          <div className="overflow-x-auto">
+    <div className="overflow-x-auto">
 
-            <table className="w-full text-left">
+      <table className="w-full text-left">
 
-              <thead className="bg-gray-100 text-gray-600 text-sm">
-                <tr>
-                  <th className="p-4">Product</th>
-                  <th className="p-4">Quantity</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4">Quotes</th>
-                </tr>
-              </thead>
+        <thead className="bg-gray-100 text-gray-600 text-sm">
+          <tr>
+            <th className="p-4">Part Name</th>
+            <th className="p-4">Quantity</th>
+            <th className="p-4">Delivery</th>
+            <th className="p-4">Status</th>
+            <th className="p-4">Quotes</th>
+          </tr>
+        </thead>
 
-              <tbody>
+        <tbody>
+          {customerRfqs.map((rfq) => (
+            <tr key={rfq._id} className="border-b hover:bg-gray-50">
+              <td className="p-4 font-medium">{rfq.partName}</td>
+              <td className="p-4">{rfq.quantity}</td>
+              <td className="p-4">{rfq.deadline}</td>
+              <td className="p-4">
+                <span
+                  className={`px-3 py-1 rounded-full text-xs ${
+                    rfq.status === "pending"
+                      ? "bg-yellow-100 text-yellow-700"
+                      : rfq.status === "approved"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  {rfq.status}
+                </span>
+              </td>
+              <td className="p-4">{rfq.quotes?.length || 0}</td>
+            </tr>
+          ))}
+        </tbody>
 
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium">Steel Pipes</td>
-                  <td className="p-4">500</td>
-                  <td className="p-4">
-                    <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs">
-                      Pending
-                    </span>
-                  </td>
-                  <td className="p-4">5</td>
-                </tr>
+      </table>
 
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium">Aluminium Sheets</td>
-                  <td className="p-4">200</td>
-                  <td className="p-4">
-                    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs">
-                      Completed
-                    </span>
-                  </td>
-                  <td className="p-4">3</td>
-                </tr>
+    </div>
 
-              </tbody>
-
-            </table>
-
-          </div>
-
-        </div>
-
+  </div>
+) : (
+  <div className="bg-white p-6 rounded-xl shadow text-center text-gray-500">
+    No RFQs found
+  </div>
+)}
 
         {/* Quotes Received */}
         <div className="bg-white rounded-xl shadow">
@@ -154,7 +174,7 @@ const CustomerBasedDashboard = () => {
                   <td className="p-4">7 Days</td>
                   <td className="p-4 space-x-2">
 
-                    <button className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded">
+                    <button  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded">
                       Accept
                     </button>
 

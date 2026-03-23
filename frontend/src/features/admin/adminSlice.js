@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
-import { getDashboardStats, getUsers, getRecentRFQs, getPendingVendors } from "../../services/adminService"
+import { getDashboardStats, getUsers, getRecentRFQs, getPendingVendors, approveVendor } from "../../services/adminService"
 
 
 // ============================
@@ -23,7 +23,23 @@ export const getStats = createAsyncThunk(
     }
   }
 )
+//approve vendor
+export const approveVend = createAsyncThunk(
+  "admin/approveVendor",
+  async (id, thunkAPI) => {
+    try {
+      const res = await approveVendor(id);
 
+      // ✅ return only vendors array
+      return res.vendors;
+
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data || "Something went wrong"
+      );
+    }
+  }
+);
 
 // ============================
 // GET USERS
@@ -82,7 +98,7 @@ export const getAllPendingVendors = createAsyncThunk(
     try {
 
       const response = await getPendingVendors(page)
-      return response.data
+      return response
 
     } catch (error) {
 
@@ -107,7 +123,8 @@ const initialState = {
   stats: {},
   users: [],
   rfqs: [],
-  pendingVendors:[]
+  pendingVendors:[],
+  noPendingVendors: false,
 }
 
 
@@ -192,6 +209,23 @@ const adminSlice = createSlice({
       })
 
       .addCase(getAllPendingVendors.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+      })
+      //approveVendor
+      .addCase(approveVend.pending, (state) => {
+        state.loading = true
+      })
+
+      .addCase(approveVend.fulfilled, (state, action) => {
+        state.loading = false
+        // update vendors list
+        state.pendingVendors = action.payload;
+        state.pendingVendors = action.payload.vendors || []
+        state.noPendingVendors = action.payload.length === 0;
+      })
+
+      .addCase(approveVend.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
       })

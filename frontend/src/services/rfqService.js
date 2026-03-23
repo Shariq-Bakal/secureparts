@@ -31,3 +31,16 @@ export const getRfqs = async (page) => {
 
   return response.data
 }
+
+export const getCustomerRfqs = async (page, limit) => {
+  const token = localStorage.getItem("token");
+
+  const response = await api.get(`/rfq/my-rfqs`, {
+    params: { page, limit }, // ✅ clean
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return response.data; // ✅ IMPORTANT
+};

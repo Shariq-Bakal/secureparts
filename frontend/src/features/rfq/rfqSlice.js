@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
-import { createRFQ, getRfqs } from "../../services/rfqService"
+import { createRFQ, getRfqs, getCustomerRfqs } from "../../services/rfqService"
 
 // CREATE RFQ
 
@@ -33,13 +33,30 @@ export const getRfq = createAsyncThunk(
     }
   }
 )
+//
+export const getCustRFqs = createAsyncThunk(
+  "rfq/custRFQ",
+  async (page, thunkAPI) => {
+    try {
+      const response = await getCustomerRfqs(page)
+      console.log(response,"sdfsdfresponse")
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data || error.message
+      )
+    }
+  }
+)
+
 
 // INITIAL STATE
 
 const initialState = {
   loading: false,
   error: null,
-  rfqs: []
+  rfqs: [],
+  customerRfqs:[]
 }
 
 // SLICE
@@ -81,6 +98,21 @@ const rfqSlice = createSlice({
       })
 
       .addCase(getRfq.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+      })
+      //getCustRfqs
+
+      .addCase(getCustRFqs.pending, (state) => {
+        state.loading = true
+      })
+
+      .addCase(getCustRFqs.fulfilled, (state, action) => {
+        state.loading = false
+        state.customerRfqs = action.payload.rfqs
+      })
+
+      .addCase(getCustRFqs.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
       })

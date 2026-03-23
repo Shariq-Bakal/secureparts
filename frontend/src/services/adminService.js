@@ -69,10 +69,27 @@ export const getPendingVendors = async (page) => {
       Authorization: `Bearer ${token}`
     }
   })
-  return response.data
+  console.log("response",response.data.vendors)
+  return response.data.vendors
 }
 
+//approve vendor
 
+export const approveVendor = async (id) => {
+  const token = localStorage.getItem("token");
+
+  const response = await api.patch(
+    `/admin/approve-vendor/${id}`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return response.data;
+};
 
 // router.get("/dashboardstats",verifyAccessToken,verifyRole("admin"),getDashboardStats)
 // router.get("/rfqs/recent",verifyAccessToken,verifyRole("admin"),getRecentRFQS)
