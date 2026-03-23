@@ -13,7 +13,7 @@ router.get(
   verifyRole("admin"),
   getPendingVendors
 );
-router.get("/dashboard",verifyAccessToken,verifyRole("admin"),getDashboardStats)
+router.get("/dashboardstats",verifyAccessToken,verifyRole("admin"),getDashboardStats)
 router.get("/rfqs/recent",verifyAccessToken,verifyRole("admin"),getRecentRFQS)
 router.get("/quotations/recent",verifyAccessToken,verifyRole("admin"),getRecentQuotations)
 router.get("/users",verifyAccessToken,verifyRole("admin"),getAllUsers)

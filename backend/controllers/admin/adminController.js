@@ -1,28 +1,73 @@
 import User from "../../models/UserModel.js";
 import RFQ from "../../models/RFQModel.js";
 import Quotation from "../../models/QuotationModel.js";
+
 export const getPendingVendors = async (req, res) => {
-    try {
+  try {
 
-        const vendors = await User.find({
-            role: "vendor",
-            vendorStatus: "pending"
-        }).select("-password");
+    const page = Number(req.query.page)
+    const limit = Number(req.query.limit)
 
-        res.status(200).json({
-            success: true,
-            message: "Pending Vendors fetched",
-            data: vendors
-        });
-
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Error fetching vendors",
-            error: error.message
-        });
+    if (Number.isNaN(page) || Number.isNaN(limit)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please give valid page number and limit"
+      })
     }
-};
+
+    if (page < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Page should be greater than 0"
+      })
+    }
+
+    if (limit < 1 || limit > 10) {
+      return res.status(400).json({
+        success: false,
+        message: "Limit should be between 1 to 10"
+      })
+    }
+
+    const skip = (page - 1) * limit
+
+    // total vendors
+    const totalVendors = await User.countDocuments({
+      role: "vendor",
+      vendorStatus: "pending"
+    })
+
+    const totalPages = Math.ceil(totalVendors / limit)
+
+    const vendors = await User.find({
+      role: "vendor",
+      vendorStatus: "pending"
+    })
+      .select("-password")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean()
+
+    res.status(200).json({
+      success: true,
+      message: "Pending Vendors fetched",
+      page,
+      totalPages,
+      totalVendors,
+      vendors
+    })
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: "Error fetching vendors",
+      error: error.message
+    })
+
+  }
+}
 
 export const approveVendor = async (req, res) => {
     try {
@@ -204,12 +249,14 @@ export const getRecentRFQS = async (req, res) => {
         }
 
         const skip = (page - 1) * limit
+        console.log(page)
 
         const recentRFQS = await RFQ
             .find()
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
+            .populate("createdBy","name")
             .lean()
 
         return res.status(200).json({
@@ -266,52 +313,68 @@ export const getRecentQuotations = async (req,res)=>{
     }
 }
 export const getAllUsers = async (req, res) => {
-    try {
-        const page = Number(req.query.page);
-        const limit = Number(req.query.limit);
+  try {
 
-        if (Number.isNaN(page) || Number.isNaN(limit)) {
-            return res.status(400).json({
-                success: false,
-                message: "Please send valid page or limit"
-            });
-        }
+    const page = Number(req.query.page)
+    const limit = Number(req.query.limit)
 
-        if (page < 1) {
-            return res.status(400).json({
-                success: false,
-                message: "Page must be greater than 0"
-            });
-        }
-
-        if (limit < 1 || limit > 10) {
-            return res.status(400).json({
-                success: false,
-                message: "Limit must be between 1 to 10"
-            });
-        }
-
-        const skip = (page - 1) * limit;
-
-        const users = await User.find()
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .lean();
-
-        res.status(200).json({
-            success: true,
-            users
-        });
-
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
+    if (Number.isNaN(page) || Number.isNaN(limit)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please send valid page or limit"
+      })
     }
-};
 
+    if (page < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Page must be greater than 0"
+      })
+    }
+
+    if (limit < 1 || limit > 10) {
+      return res.status(400).json({
+        success: false,
+        message: "Limit must be between 1 to 10"
+      })
+    }
+
+    const skip = (page - 1) * limit
+
+
+    // 🔵 Get total users count
+    const totalUsers = await User.countDocuments()
+
+
+    // 🔵 Fetch paginated users
+    const users = await User.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean()
+
+
+    // 🔵 Calculate total pages
+    const totalPages = Math.ceil(totalUsers / limit)
+
+
+    res.status(200).json({
+      success: true,
+      users,
+      totalUsers,
+      totalPages,
+      currentPage: page
+    })
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
+
+  }
+}
 
 export const getAllRFQS = async (req, res) => {
     try {
@@ -342,14 +405,15 @@ export const getAllRFQS = async (req, res) => {
         const skip = (page - 1) * limit;
 
         const rfqs = await RFQ.find()
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .lean();
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .populate("createdBy", "name")
+                .lean();
 
         const totalRFQS = await RFQ.countDocuments();
 
-        res.status(200).json({
+       return res.status(200).json({
             success: true,
             page,
             limit,
