@@ -54,7 +54,7 @@ const Navbar = () => {
         <div className="absolute top-full left-0 w-full bg-white shadow-md md:hidden">
           <a href="/" className="block px-6 py-3 hover:bg-gray-50">Home</a>
           <a href="/about" className="block px-6 py-3 hover:bg-gray-50">About Us</a>
-          <a href="/careers" className="block px-6 py-3 hover:bg-gray-50">Career Opportunities</a>
+          <a href="/contact" className="block px-6 py-3 hover:bg-gray-50">contact us</a>
         </div>
       )}
 

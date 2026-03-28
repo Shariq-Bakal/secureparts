@@ -6,22 +6,26 @@ import ProtectedRoute from "./routes/ProtectedRoute"
 import RoleBasedDashboard from "./pages/dash-board/RoleBasedDashboard"
 import CreateRfq from "./pages/rfq/CreateRfq"
 import RFQList from "./pages/rfq/RfqList"
-import { Home } from "lucide-react"
+import Home from "./pages/nondynamicpages/Home"
+import About from "./pages/nondynamicpages/About"
+import Contact from "./pages/nondynamicpages/Contact"
 function App() {
 
   return (
     <BrowserRouter>
         <Routes>
-
+          <Route path = "/" element={<Home/>}/>
+          <Route path = "/about" element={<About/>}/>
+          <Route path = "/contact" element={<Contact/>}/>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={
             <ProtectedRoute>
             <Profile /> 
             </ProtectedRoute>} />
-          <Route path="/dashboard" element={
+          <Route path="/dashboard/:tab?" element={
             <ProtectedRoute>
-            <RoleBasedDashboard />
+            <RoleBasedDashboard/>
             </ProtectedRoute>} />
           <Route path = "/createrfq" element={
             <ProtectedRoute>
@@ -29,7 +33,7 @@ function App() {
             </ProtectedRoute>
           }/>
           <Route path = "/rfqs" element={<RFQList/>}/>
-          <Route path = "/" element={<Home/>}/>
+          
         </Routes>
         
     </BrowserRouter>

@@ -4,13 +4,13 @@ import { FiHome, FiFileText, FiDollarSign, FiUser, FiLogOut } from "react-icons/
 const Sidebar = () => {
 
   const linkStyle =
-    "flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 hover:bg-gray-800"
+    "flex items-center gap-3 p-3 rounded-lg transition-colors duration-200 hover:bg-blue-200"
 
-  const activeStyle = "bg-gray-800"
+  const activeStyle = "bg-blue-200"
 
   return (
 
-    <div className="w-64 bg-gray-900 text-white flex flex-col justify-between p-6">
+    <div className="w-64 bg-blue-600 text-white flex flex-col justify-between p-6">
 
       {/* Logo / Title */}
       <div>
@@ -42,15 +42,6 @@ const Sidebar = () => {
             RFQs
           </NavLink>
 
-          <NavLink
-            to="/quotations"
-            className={({ isActive }) =>
-              `${linkStyle} ${isActive ? activeStyle : ""}`
-            }
-          >
-            <FiDollarSign size={18} />
-            Quotations
-          </NavLink>
 
           <NavLink
             to="/profile"

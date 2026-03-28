@@ -52,7 +52,6 @@ export const getAllUsers = createAsyncThunk(
     try {
       // Pass the page to your service function
       const response = await getUsers(page)
-      console.log("getAllUsers response:", response)
       return response
 
     } catch (error) {
@@ -98,6 +97,7 @@ export const getAllPendingVendors = createAsyncThunk(
     try {
 
       const response = await getPendingVendors(page)
+      console.log(response,"sfsfsf")
       return response
 
     } catch (error) {
@@ -220,9 +220,8 @@ const adminSlice = createSlice({
       .addCase(approveVend.fulfilled, (state, action) => {
         state.loading = false
         // update vendors list
-        state.pendingVendors = action.payload;
         state.pendingVendors = action.payload.vendors || []
-        state.noPendingVendors = action.payload.length === 0;
+        state.noPendingVendors = action.payload.length === 0; //this will set true
       })
 
       .addCase(approveVend.rejected, (state, action) => {

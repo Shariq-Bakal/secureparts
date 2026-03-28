@@ -69,7 +69,7 @@ export const getPendingVendors = async (page) => {
       Authorization: `Bearer ${token}`
     }
   })
-  console.log("response",response.data.vendors)
+  console.log("responsed",response.data.vendors)
   return response.data.vendors
 }
 
