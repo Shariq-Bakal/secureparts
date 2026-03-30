@@ -50,34 +50,6 @@ const AuthLayout = ({ children }) => {
           <p className="text-gray-500 mt-2 text-sm">{getSubtitle()}</p>
         </div>
 
-        {/* Role Selection (only for registration) */}
-        {isRegister && (
-          <div className="mb-6 bg-gray-50 rounded-xl p-1 flex gap-1">
-            <button
-              onClick={() => setRole("customer")}
-              className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                role === "customer"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-blue-600"
-              }`}
-            >
-              <User className="w-4 h-4 inline mr-2" />
-              Customer
-            </button>
-            <button
-              onClick={() => setRole("vendor")}
-              className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                role === "vendor"
-                  ? "bg-white text-blue-600 shadow-sm"
-                  : "text-gray-600 hover:text-blue-600"
-              }`}
-            >
-              <Building2 className="w-4 h-4 inline mr-2" />
-              Vendor
-            </button>
-          </div>
-        )}
-
         {/* Auth Card */}
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           <div className="p-6 sm:p-8">

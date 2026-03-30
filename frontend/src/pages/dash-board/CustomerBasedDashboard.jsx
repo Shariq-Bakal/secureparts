@@ -4,28 +4,35 @@ import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { getCustRFqs } from "../../features/rfq/rfqSlice";
 import { useEffect } from "react";
-
+import LoadingSpinner from "../../components/LoadingSpinner";
+import { useState } from "react";
 const CustomerBasedDashboard = () => {
+  const [show, setShow] = useState(false);
   const navigate = useNavigate();
   const navigateToCreateRFQ = ()=>{
     navigate("/createrfq")
   }
-  const {customerRfqs} = useSelector((state)=>state.rfq)
-  console.log(customerRfqs,"sfdsfdsff")
+  const {customerRfqs,loading} = useSelector((state)=>state.rfq)
   const dispatch = useDispatch();
-  console.log(customerRfqs)
+ console.log(customerRfqs)
   useEffect(()=>{
     dispatch(getCustRFqs({ page: 1, limit: 5 }))
   },[dispatch])
+   useEffect(() => {
+    const timer = setTimeout(() => {
+      setShow(true);
+    }, 2000); // 2 seconds delay
 
-  const approveVendor = ()=>{
-    console.log("Vendor approved successfully")
-  }
+    return () => clearTimeout(timer); // cleanup
+  }, []);
+
+
   return (
 
     <DashboardLayout>
-
-      <div className="p-8 space-y-10 bg-gray-50 min-h-screen">
+      {
+        show?(
+           <div className="p-8 space-y-10 bg-gray-50 min-h-screen">
 
         {/* Header */}
         <div className="flex justify-between items-center">
@@ -194,6 +201,15 @@ const CustomerBasedDashboard = () => {
         </div>
 
       </div>
+        ):(
+          <LoadingSpinner/>
+
+        )
+      }
+      
+      
+
+     
 
     </DashboardLayout>
 

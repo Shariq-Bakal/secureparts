@@ -4,6 +4,7 @@ import { useState } from "react";
 
 const Navbar = () => {
   const user = useSelector((state) => state.auth.user);
+  console.log(user)
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -12,14 +13,16 @@ const Navbar = () => {
       {/* Left side - Logo / Title */}
       <div className="flex items-center space-x-4">
         <h2 className="text-2xl font-bold text-gray-800">Dashboard</h2>
-        <span className="text-gray-400 text-sm">Admin Panel</span>
+       {user.role==="customer"&&(<span>Customer Panel</span>)}
+       {user.role==="admin"&&(<span>Admin Panel</span>)}
+       {user.role ==="vendor"&&(<span>Vendor Panel</span>)}
       </div>
 
       {/* Center - Navigation Links */}
       <div className="hidden md:flex space-x-6 text-gray-700 font-medium">
         <a href="/" className="hover:text-gray-900 transition">Home</a>
-        <a href="/about" className="hover:text-gray-900 transition">About Us</a>
-        <a href="/careers" className="hover:text-gray-900 transition">Career Opportunities</a>
+        <a href="/about" className="hover:text-gray-900 transition">About</a>
+        <a href="/contact" className="hover:text-gray-900 transition">Contact</a>
       </div>
 
       {/* Right side - User + Notifications */}

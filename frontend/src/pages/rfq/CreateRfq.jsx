@@ -31,8 +31,10 @@ const CreateRFQ = () => {
   try {
     console.log(rfqData)
     await dispatch(createRfq(rfqData)).unwrap()
+     
 
     navigate("/dashboard")
+    
 
   } catch (error) {
 

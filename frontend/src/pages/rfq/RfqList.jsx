@@ -50,42 +50,49 @@ const RFQList = () => {
 
         {/* Table */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-gray-100 text-gray-600 uppercase text-xs tracking-wider">
-              <tr>
-                <th className="px-6 py-3">Part Name</th>
-                <th className="px-6 py-3">Description</th>
-                <th className="px-6 py-3">Category</th>
-                <th className="px-6 py-3">Quantity</th>
-                <th className="px-6 py-3">Deadline</th>
-                <th className="px-6 py-3">Days Left</th>
-                <th className="px-6 py-3">Status</th>
-                <th className="px-6 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rfqs.map((rfq) => (
-                <tr key={rfq._id} className="border-t hover:bg-gray-50 transition">
-                  <td className="px-6 py-4 font-medium text-gray-800">{rfq.partName}</td>
-                  <td className="px-6 py-4 text-gray-600">{rfq.description}</td>
-                  <td className="px-6 py-4 text-gray-600">{rfq.category}</td>
-                  <td className="px-6 py-4">{rfq.quantity}</td>
-                  <td className="px-6 py-4">{dayjs(rfq.deadline).format("DD/MM/YYYY")}</td>
-                  <td className="px-6 py-4">{calculateDaysLeft(rfq.deadline)}</td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`px-3 py-1 rounded-full border text-xs font-medium ${statusStyle[rfq.status.toLowerCase()]}`}
-                    >
-                      {rfq.status.charAt(0).toUpperCase() + rfq.status.slice(1)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="px-3 py-1 text-sm text-gray-500 hover:text-black">View</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+         <div className="overflow-x-auto w-full">
+  <table className="min-w-full border-collapse">
+    <thead className="bg-blue-600 h-16">
+      <tr className="border-b border-gray-200">
+        <th className="px-4 py-3 text-left text-sm font-semibold text-white">Part Name</th>
+        <th className="px-4 py-3 text-left text-sm font-semibold text-white">Description</th>
+        <th className="px-4 py-3 text-left text-sm font-semibold text-white">Category</th>
+        <th className="px-4 py-3 text-left text-sm font-semibold text-white">Quantity</th>
+        <th className="px-4 py-3 text-left text-sm font-semibold text-white">Deadline</th>
+        <th className="px-4 py-3 text-left text-sm font-semibold text-white">Days Left</th>
+        <th className="px-4 py-3 text-left text-sm font-semibold text-white">Status</th>
+        <th className="px-4 py-3 text-left text-sm font-semibold text-white">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {rfqs.map((rfq) => (
+        <tr key={rfq._id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+          <td className="px-4 py-3 text-sm text-gray-800">{rfq.partName}</td>
+          <td className="px-4 py-3 text-sm text-gray-600">{rfq.description}</td>
+          <td className="px-4 py-3 text-sm text-gray-600">{rfq.category}</td>
+          <td className="px-4 py-3 text-sm text-gray-600">{rfq.quantity}</td>
+          <td className="px-4 py-3 text-sm text-gray-600">{dayjs(rfq.deadline).format("DD/MM/YYYY")}</td>
+          <td className="px-4 py-3 text-sm text-gray-600">{calculateDaysLeft(rfq.deadline)}</td>
+          <td className="px-4 py-3">
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyle[rfq.status.toLowerCase()]}`}
+            >
+              {rfq.status.charAt(0).toUpperCase() + rfq.status.slice(1)}
+            </span>
+          </td>
+          <td className="px-4 py-3">
+            <button 
+              onClick={() => handleView(rfq._id)}
+              className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+            >
+              View
+            </button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
 
           {/* Pagination */}
           <div className="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
@@ -102,7 +109,7 @@ const RFQList = () => {
               </button>
               <button
                 onClick={() => setPage(page + 1)}
-                className="px-3 py-1 text-sm border rounded-md hover:bg-gray-100"
+                className="px-3 py-1 text-sm border rounded-md bg-blue-600 hover:bg-gray-100 hover:text-black text-white"
               >
                 Next
               </button>
