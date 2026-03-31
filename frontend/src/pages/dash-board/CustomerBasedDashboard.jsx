@@ -14,7 +14,6 @@ const CustomerBasedDashboard = () => {
   }
   const {customerRfqs,loading} = useSelector((state)=>state.rfq)
   const dispatch = useDispatch();
- console.log(customerRfqs)
   useEffect(()=>{
     dispatch(getCustRFqs({ page: 1, limit: 5 }))
   },[dispatch])

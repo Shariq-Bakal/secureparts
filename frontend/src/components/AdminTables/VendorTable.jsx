@@ -9,7 +9,6 @@ const VendorTable = () => {
   const { pendingVendors, loading, noPendingVendors } = useSelector(
     (state) => state.admin
   )
-  console.log(pendingVendors)
    const [page, setPage] = useState(1)
 
 
@@ -19,6 +18,7 @@ const VendorTable = () => {
 
 
   const handleApprove = (id) => {
+    console.log(id)
     dispatch(approveVend(id))
   }
   const columnHelper = createColumnHelper();
@@ -34,6 +34,10 @@ const VendorTable = () => {
     columnHelper.accessor("role",{
       cell:(info)=>info.getValue(),
       header: <span className="flex items-center">PART NAME</span>,
+    }),
+    columnHelper.accessor("vendorStatus",{
+      cell:(info)=>info.getValue(),
+      header: <span className="flex items-center">STATUS</span>,
     }),
   ]
   const table = useReactTable({
@@ -62,6 +66,8 @@ const VendorTable = () => {
           {flexRender(header.column.columnDef.header, header.getContext())}
         </th>
       ))}
+      <th className="px-6 py-3 text-xs text-left uppercase"
+      >Actions</th>
     </tr>
   ))}
 </thead>
@@ -80,6 +86,14 @@ const VendorTable = () => {
             {flexRender(cell.column.columnDef.cell, cell.getContext())}
           </td>
         ))}
+        <td className="p-4 flex gap-2">
+  <button className="bg-red-500 hover:cursor-pointer hover:bg-red-600 text-white px-3 py-1 rounded shadow transition">
+    Reject
+  </button>
+  <button onClick={() => handleApprove(row.original._id)}className="bg-green-500 hover:cursor-pointer hover:bg-green-600 text-white px-3 py-1 rounded shadow transition">
+    Accept
+  </button>
+</td>
       </tr>
     ))
   ) :(

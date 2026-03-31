@@ -220,8 +220,9 @@ const adminSlice = createSlice({
       .addCase(approveVend.fulfilled, (state, action) => {
         state.loading = false
         // update vendors list
-        state.pendingVendors = action.payload.vendors || []
-        state.noPendingVendors = action.payload.length === 0; //this will set true
+        const approvedId = action.meta.arg; // this is the ID we passed to the thunk
+        state.pendingVendors = state.pendingVendors.filter(v => v._id !== approvedId);
+        state.noPendingVendors = state.pendingVendors.length === 0;
       })
 
       .addCase(approveVend.rejected, (state, action) => {

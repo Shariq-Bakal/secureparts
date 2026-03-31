@@ -9,6 +9,7 @@ import RFQList from "./pages/rfq/RfqList"
 import Home from "./pages/nondynamicpages/Home"
 import About from "./pages/nondynamicpages/About"
 import Contact from "./pages/nondynamicpages/Contact"
+import RfqDetails from "./pages/rfq/RfqDetails"
 function App() {
 
   return (
@@ -30,6 +31,11 @@ function App() {
           <Route path = "/createrfq" element={
             <ProtectedRoute>
             <CreateRfq/>
+            </ProtectedRoute>
+          }/>
+          <Route path = "/rfqs/:id" element={
+            <ProtectedRoute>
+            <RfqDetails/>
             </ProtectedRoute>
           }/>
           <Route path = "/rfqs" element={<RFQList/>}/>
