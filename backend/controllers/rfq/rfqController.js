@@ -239,14 +239,18 @@ export const getAllRfq = async (req, res) => {
 //get rfq details 
 export const getRfqDetails = async(req,res)=>{
   try{
-     if (req.user.role !== "vendor" || req.user.isApproved !== true) {
-      return res.status(403).json({
-        success: false,
-        message: "Only approved vendors can check RFQs"
-      })
-    }
+    if (!["admin", "vendor"].includes(req.user.role) || req.user.role === "vendor" && !req.user.isApproved) {
+  return res.status(403).json({
+    success: false,
+    message: "Only approved vendors or admin can check RFQs"
+  });
+}
+    
     const {id} = req.params;
     console.log(id)
+    console.log("req.user:", req.user);
+    console.log("role:", req.user?.role);
+    console.log("isApproved:", req.user?.isApproved);
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,

@@ -6,6 +6,7 @@ import { getCustRFqs } from "../../features/rfq/rfqSlice";
 import { useEffect } from "react";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { useState } from "react";
+import RFQTable from "../../components/CustomerTables/RfqTable";
 const CustomerBasedDashboard = () => {
   const [show, setShow] = useState(false);
   const navigate = useNavigate();
@@ -73,57 +74,7 @@ const CustomerBasedDashboard = () => {
 
        {/* My RFQs */}
 {customerRfqs && customerRfqs.length > 0 ? (
-  <div className="bg-white rounded-xl shadow">
-
-    <div className="flex justify-between items-center p-6 border-b">
-      <h2 className="text-xl font-semibold text-gray-700">
-        My RFQs
-      </h2>
-    </div>
-
-    <div className="overflow-x-auto">
-
-      <table className="w-full text-left">
-
-        <thead className="bg-gray-100 text-gray-600 text-sm">
-          <tr>
-            <th className="p-4">Part Name</th>
-            <th className="p-4">Quantity</th>
-            <th className="p-4">Delivery</th>
-            <th className="p-4">Status</th>
-            <th className="p-4">Quotes</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {customerRfqs.map((rfq) => (
-            <tr key={rfq._id} className="border-b hover:bg-gray-50">
-              <td className="p-4 font-medium">{rfq.partName}</td>
-              <td className="p-4">{rfq.quantity}</td>
-              <td className="p-4">{rfq.deadline}</td>
-              <td className="p-4">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs ${
-                    rfq.status === "pending"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : rfq.status === "approved"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  {rfq.status}
-                </span>
-              </td>
-              <td className="p-4">{rfq.quotes?.length || 0}</td>
-            </tr>
-          ))}
-        </tbody>
-
-      </table>
-
-    </div>
-
-  </div>
+  <RFQTable/>
 ) : (
   <div className="bg-white p-6 rounded-xl shadow text-center text-gray-500">
     No RFQs found
@@ -198,6 +149,7 @@ const CustomerBasedDashboard = () => {
           </div>
 
         </div>
+        
 
       </div>
         ):(
