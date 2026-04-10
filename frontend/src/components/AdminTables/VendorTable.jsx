@@ -1,113 +1,208 @@
-import { useEffect } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { getAllPendingVendors, approveVend } from "../../features/admin/adminSlice"
-import { createColumnHelper,getCoreRowModel,useReactTable, flexRender  } from "@tanstack/react-table"
-import { useState } from "react"
-const VendorTable = () => {
+import {
+  getAllPendingVendors,
+  approveVend,
+} from "../../features/admin/adminSlice"
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  useReactTable,
+  flexRender,
+} from "@tanstack/react-table"
+import {
+  tableWrapperClass,
+  thClass,
+  tdClass,
+  rowClass,
+  headerClass,
+} from "../table/TableStyle"
 
+const columnHelper = createColumnHelper()
+
+const VendorTable = () => {
   const dispatch = useDispatch()
   const { pendingVendors, loading, noPendingVendors } = useSelector(
     (state) => state.admin
   )
-   const [page, setPage] = useState(1)
-
+  const [page, setPage] = useState(1)
+  const totalPages = pendingVendors?.totalPages || 1
 
   useEffect(() => {
     dispatch(getAllPendingVendors(page))
-  }, [dispatch,page])
-
+  }, [dispatch, page])
 
   const handleApprove = (id) => {
-    console.log(id)
     dispatch(approveVend(id))
   }
-  const columnHelper = createColumnHelper();
-  const columns = [
-    columnHelper.accessor("name",{
-      cell:(info)=>info.getValue(),
-      header: <span className="flex items-center">NAME</span>,
-    }),
-    columnHelper.accessor("email",{
-      cell:(info)=>info.getValue(),
-      header: <span className="flex items-center">EMAIL</span>,
-    }),
-    columnHelper.accessor("role",{
-      cell:(info)=>info.getValue(),
-      header: <span className="flex items-center">PART NAME</span>,
-    }),
-    columnHelper.accessor("vendorStatus",{
-      cell:(info)=>info.getValue(),
-      header: <span className="flex items-center">STATUS</span>,
-    }),
-  ]
+
+  const handleReject = (id) => {
+    console.log("Reject vendor:", id)
+  }
+
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor("name", {
+        cell: (info) => (
+          <span className="font-medium text-slate-900">{info.getValue()}</span>
+        ),
+        header: () => <span className="flex items-center">NAME</span>,
+      }),
+      columnHelper.accessor("email", {
+        cell: (info) => (
+          <span className="text-slate-600">{info.getValue()}</span>
+        ),
+        header: () => <span className="flex items-center">EMAIL</span>,
+      }),
+      columnHelper.accessor("role", {
+        cell: (info) => (
+          <span className="text-slate-600">{info.getValue()}</span>
+        ),
+        header: () => <span className="flex items-center">PART NAME</span>,
+      }),
+      columnHelper.accessor("vendorStatus", {
+        cell: (info) => {
+          const value = info.getValue()
+          return (
+            <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">
+              {value}
+            </span>
+          )
+        },
+        header: () => <span className="flex items-center">STATUS</span>,
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: () => <span>ACTIONS</span>,
+        cell: ({ row }) => (
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleReject(row.original._id)}
+              className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white shadow transition hover:cursor-pointer hover:bg-red-600"
+            >
+              Reject
+            </button>
+            <button
+              onClick={() => handleApprove(row.original._id)}
+              className="rounded-lg bg-green-500 px-3 py-1.5 text-xs font-medium text-white shadow transition hover:cursor-pointer hover:bg-green-600"
+            >
+              Accept
+            </button>
+          </div>
+        ),
+      }),
+    ],
+    []
+  )
+
   const table = useReactTable({
-    data:pendingVendors || [],
+    data: pendingVendors || [],
     columns,
-    getCoreRowModel:getCoreRowModel()
-    
+    getCoreRowModel: getCoreRowModel(),
   })
 
   return (
-    <div>
-
-      <h2 className="text-xl font-semibold mb-4">Pending Vendors</h2>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-slate-900">Pending Vendors</h2>
+      </div>
 
       {noPendingVendors && (
-        <p className="text-green-600">All vendors approved ✅</p>
+        <p className="text-sm font-medium text-green-600">
+          All vendors approved ✅
+        </p>
       )}
 
-      <table className="w-full border">
+      <div className={tableWrapperClass}>
+        <div className="overflow-x-auto">
+          <table className="min-w-[900px] w-full table-auto">
+            <thead className={headerClass}>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th key={header.id} className={thClass}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
 
-        <thead className="bg-gray-50">
-  {table.getHeaderGroups().map(headerGroup => (
-    <tr key={headerGroup.id}>
-      {headerGroup.headers.map(header => (
-        <th key={header.id} className="px-6 py-3 text-xs text-left uppercase">
-          {flexRender(header.column.columnDef.header, header.getContext())}
-        </th>
-      ))}
-      <th className="px-6 py-3 text-xs text-left uppercase"
-      >Actions</th>
-    </tr>
-  ))}
-</thead>
-      <tbody className="divide-y bg-white divide-gray-200">
-  {loading ? (
-    <tr>
-      <td colSpan={columns.length} className="text-center py-6 text-gray-500">
-        Loading...
-      </td>
-    </tr>
-  ) : pendingVendors&& pendingVendors.length > 0 ? (
-    table.getRowModel().rows.map(row => (
-      <tr key={row.id} className="hover:bg-gray-50">
-        {row.getVisibleCells().map(cell => (
-          <td key={cell.id} className="px-6 py-4 text-sm text-gray-500">
-            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-          </td>
-        ))}
-        <td className="p-4 flex gap-2">
-  <button className="bg-red-500 hover:cursor-pointer hover:bg-red-600 text-white px-3 py-1 rounded shadow transition">
-    Reject
-  </button>
-  <button onClick={() => handleApprove(row.original._id)}className="bg-green-500 hover:cursor-pointer hover:bg-green-600 text-white px-3 py-1 rounded shadow transition">
-    Accept
-  </button>
-</td>
-      </tr>
-    ))
-  ) :(
-    <tr>
-      <td colSpan={columns.length} className="text-center py-6 text-gray-400">
-        No Pending Vendors
-      </td>
-    </tr>
-  ) }
-</tbody>
+            <tbody className="divide-y divide-slate-200 bg-white">
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="py-6 text-center text-sm text-slate-500"
+                  >
+                    Loading...
+                  </td>
+                </tr>
+              ) : pendingVendors && pendingVendors.length > 0 ? (
+                table.getRowModel().rows.map((row) => (
+                  <tr key={row.id} className={rowClass}>
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className={tdClass}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="py-6 text-center text-sm text-slate-400"
+                  >
+                    No Pending Vendors
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
+      {/* Optional temporary pagination buttons if you already use page state */}
+       <div className="border-t border-slate-100 px-6 py-4">
+        <div className="flex justify-between items-center">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              page === 1
+                ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                : "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200"
+            }`}
+          >
+            Previous
+          </button>
 
-      </table>
+          <span className="text-sm text-slate-600">
+            Page {page} of {totalPages}
+          </span>
 
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              page === totalPages
+                ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                : "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200"
+            }`}
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
