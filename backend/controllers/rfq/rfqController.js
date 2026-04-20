@@ -83,11 +83,50 @@ export const getMyRfqs = async (req, res) => {
 
 
     // Fetch data
-    const rfqs = await RFQ.find({ createdBy: req.user._id })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    //conveting users string id to mongodb id
+
+    const customerObjectId = new mongoose.Types.ObjectId(req.user._id);
+
+    const rfqs = await RFQ.aggregate([
+      // STAGE 1: Match (Find only the RFQs created by this customer)
+      { 
+        $match: { createdBy: customerObjectId } 
+      },
+
+      // STAGE 2: Sort and Paginate (Replicating your exact previous logic)
+      { $sort: { createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+
+      // STAGE 3: The Join (Go get the quotes)
+      // "Look inside the 'quotations' collection. Find any quotes where the 'rfq' field matches this RFQ's '_id'."
+      {
+        $lookup: {
+          from: "quotations",       // Must be the exact name of your MongoDB collection (usually lowercase plural)
+          localField: "_id",        // The ID of the RFQ we are looking at
+          foreignField: "rfq",      // The field in the Quotation model that points back to the RFQ
+          as: "allQuotations"       // Temporarily shove all those found quotes into an array called 'allQuotations'
+        }
+      },
+
+      // STAGE 4: Do the Math
+      // Create a brand new field on the fly called 'totalQuotes'
+      {
+        $addFields: {
+          // The total quotes is simply the length ($size) of the array we just created
+          totalQuotes: { $size: "$allQuotations" } 
+        }
+      },
+
+      // STAGE 5: Clean Up
+      // We don't want to send the massive array of quotes to the customer's dashboard, 
+      // we only needed it to count them. So, we remove the array before sending.
+      {
+        $project: {
+          allQuotations: 0 // '0' means hide this field
+        }
+      }
+    ]);
 
     return res.status(200).json({
       success: true,
@@ -247,7 +286,6 @@ export const getRfqDetails = async(req,res)=>{
 }
     
     const {id} = req.params;
-    console.log(id)
     console.log("req.user:", req.user);
     console.log("role:", req.user?.role);
     console.log("isApproved:", req.user?.isApproved);

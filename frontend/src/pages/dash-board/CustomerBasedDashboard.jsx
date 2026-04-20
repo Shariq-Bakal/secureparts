@@ -93,7 +93,6 @@ const CustomerBasedDashboard = () => {
           <div className="overflow-x-auto">
 
             <table className="w-full text-left">
-
               <thead className="bg-gray-100 text-gray-600 text-sm">
                 <tr>
                   <th className="p-4">Vendor</th>

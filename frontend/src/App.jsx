@@ -10,6 +10,7 @@ import Home from "./pages/nondynamicpages/Home"
 import About from "./pages/nondynamicpages/About"
 import Contact from "./pages/nondynamicpages/Contact"
 import RfqDetails from "./pages/rfq/RfqDetails"
+import CustomerRFQDetail from "./pages/rfq/CustomerRFQDetail"
 function App() {
 
   return (
@@ -36,6 +37,11 @@ function App() {
           <Route path = "/rfqs/:id" element={
             <ProtectedRoute>
             <RfqDetails/>
+            </ProtectedRoute>
+          }/>
+          <Route path = "/customer-rfq-detail/:id" element={
+            <ProtectedRoute>
+            <CustomerRFQDetail/>
             </ProtectedRoute>
           }/>
           <Route path = "/rfqs" element={<RFQList/>}/>

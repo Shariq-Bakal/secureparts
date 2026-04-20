@@ -5,6 +5,7 @@ import {createColumnHelper, flexRender, getCoreRowModel, useReactTable} from "@t
 import {User} from "lucide-react"
 import { tableWrapperClass,headerClass, thClass, tdClass, rowClass } from "../table/TableStyle"
 import { getCustRFqs } from "../../features/rfq/rfqSlice"
+import { useNavigate } from "react-router-dom"
 const RFQTable = () => {
 
  
@@ -12,7 +13,8 @@ const RFQTable = () => {
 
   const [page, setPage] = useState(1)
 
-  const {customerRfqs,loading} = useSelector((state)=>state.rfq)
+  const {customerRfqs,loading} = useSelector((state)=>state.rfq);
+  const navigate = useNavigate();
     const dispatch = useDispatch();
     useEffect(()=>{
       dispatch(getCustRFqs({ page: 1, limit: 5 }))
@@ -24,7 +26,9 @@ const RFQTable = () => {
   
       return () => clearTimeout(timer); // cleanup
     }, []);
-    console.log(customerRfqs,"customerrfqs")
+    const handleView  = (id)=>{
+      navigate(`/customer-rfq-detail/${id}`)
+    }
   const totalPages = customerRfqs?.totalPages || 1
   const columnHelper = createColumnHelper();
   const columns = [
@@ -42,7 +46,6 @@ const RFQTable = () => {
         </span>
       ),
       
-
     }),
     columnHelper.accessor("category", {
   cell: (info) => info.getValue(),
@@ -61,7 +64,35 @@ const RFQTable = () => {
       ),
       
 
-    })
+    }),
+     columnHelper.accessor("totalQuotes",{
+      cell:(info)=>info.getValue(),
+      header:()=>(
+        <span className="flex items-center">
+          Total Quotes
+        </span>
+      ),
+      
+
+    }),
+    columnHelper.display({
+    id: 'actions', // A unique ID is required for display columns
+    header: 'Actions',
+    cell: (info) => {
+      // 'info.row.original' gives you the entire RFQ object for this specific row!
+      const rfq = info.row.original;
+
+      return (
+        <button
+          // We grab the _id directly from the row data
+          onClick={() => handleView(rfq._id)} 
+          className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+        >
+          View
+        </button>
+      );
+    },
+  }),
   ]
   const table = useReactTable({
     data:customerRfqs|| [],

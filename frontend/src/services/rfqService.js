@@ -80,6 +80,7 @@ export const getCustomerRfqs = async (page, limit) => {
       Authorization: `Bearer ${token}`,
     },
   });
+  console.log(response.data, "Customer services")
 
   return response.data; // ✅ IMPORTANT
 };
