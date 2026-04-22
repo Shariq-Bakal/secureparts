@@ -4,7 +4,8 @@ import {
   getRfqs,
   getCustomerRfqs,
   getOpenRFQs,
-  getOpenRFQDetails
+  getOpenRFQDetails,
+  getCustomerRfqDetails
 } from "../../services/rfqService"
 
 
@@ -87,6 +88,22 @@ export const getOpenRfqsDetail = createAsyncThunk(
   }
 )
 
+//CustomerRrq detail 
+export const getCusTomerRfqDetails= createAsyncThunk(
+  "rfq/customerRfqDetail",
+  async (id, thunkAPI) => {
+    try {
+      const response = await getCustomerRfqDetails(id)
+      console.log(response,"datass")
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data || error.message
+      )
+    }
+  }
+)
+
 // ==========================
 // INITIAL STATE
 // ==========================
@@ -98,7 +115,8 @@ const initialState = {
   rfqs: [],           // all RFQs
   customerRfqs: [],   // customer RFQs
   openRfqs: [],        // vendor open RFQs ✅ FIXED
-  openRfqDetails:{}
+  openRfqDetails:{},
+  customerRfqDetails:{}
 
   // Optional (future scaling)
   // totalPages: 1,
@@ -208,6 +226,23 @@ const rfqSlice = createSlice({
       })
 
       .addCase(getOpenRfqsDetail.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+      })
+      //Get customer rfq details
+       .addCase(getCusTomerRfqDetails.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+
+      .addCase(getCusTomerRfqDetails.fulfilled, (state, action) => {
+        state.loading = false
+
+        state.customerRfqDetails =
+        action.payload || {}
+      })
+
+      .addCase(getCusTomerRfqDetails.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
       })

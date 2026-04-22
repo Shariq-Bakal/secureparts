@@ -314,3 +314,44 @@ export const getRfqDetails = async(req,res)=>{
     })
   }
 }
+
+//getcustomerrfq details
+
+export const getCustomerRfqDetails = async(req,res)=>{
+  try{
+    if (req.user.role !== "customer") {
+  return res.status(403).json({
+    success: false,
+    message: "Only customers or admin can check RFQs"
+  });
+}
+    
+    const {id} = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid RFQ ID",
+      });
+    }
+    const customerRfqDetails = await RFQ.findOne({
+  _id: id,
+  createdBy: req.user._id
+});
+    if (!customerRfqDetails) {
+      return res.status(404).json({
+        success: false,
+        message: "RFQ not found",
+      });
+    }
+    res.status(200).json({
+      success:true,
+      customerRfqDetails
+    })
+  }
+  catch(error){
+    return res.status(500).json({
+      success:false,
+      message:"Internal server error"
+    })
+  }
+}

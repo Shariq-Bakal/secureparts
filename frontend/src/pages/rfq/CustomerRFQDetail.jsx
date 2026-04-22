@@ -1,349 +1,259 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import React, { useEffect } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import DashboardLayout from "../../layouts/DashboardLayout";
+
+import {
+  getCusTomerRfqDetails
+} from "../../features/rfq/rfqSlice";
+
+import {
+  getQuotationsByRfqThunk
+} from "../../features/quotation/quotationSlice";
 
 const CustomerRFQDetail = () => {
-  const { id } = useParams();
   const navigate = useNavigate();
-  const [rfq, setRfq] = useState(null);
-  const [quotations, setQuotations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [processingId, setProcessingId] = useState(null);
-
+  const dispatch = useDispatch();
+  const location = useLocation();
+  const { id } = useParams();
+  
+  // Debug logging
   useEffect(() => {
-    fetchRFQDetails();
-  }, [id]);
+    console.log("=== CustomerRFQDetail Debug ===");
+    console.log("URL path:", location.pathname);
+    console.log("ID from params:", id);
+    console.log("State from navigation:", location.state);
+  }, [location, id]);
 
-  const fetchRFQDetails = async () => {
-    try {
-      setLoading(true);
-      // Fetch RFQ details
-      const rfqResponse = await axios.get(`/api/rfqs/${id}`);
-      setRfq(rfqResponse.data.data);
-      
-      // Fetch quotations for this RFQ
-      const quotesResponse = await axios.get(`/api/rfqs/${id}/quotations`);
-      setQuotations(quotesResponse.data.data);
-      
-      setError(null);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch RFQ details');
-      console.error('Error fetching details:', err);
-    } finally {
-      setLoading(false);
+  // ================= RFQ STATE =================
+  const {
+    customerRfqDetails,
+    loading,
+    error
+  } = useSelector((state) => state.rfq);
+
+  // ================= QUOTATION STATE =================
+  const {
+    vendorQuotations,
+    loading: quoteLoading,
+    error: quoteError
+  } = useSelector((state) => state.quotation);
+
+  // ================= FETCH DATA =================
+  useEffect(() => {
+    if (id) {
+      console.log("Fetching data for RFQ ID:", id);
+      dispatch(getCusTomerRfqDetails(id));
+      console.log(vendorQuotations)
+      dispatch(getQuotationsByRfqThunk(id));
+      console.log(vendorQuotations)
+    } else {
+      console.error("No ID found in URL params");
     }
+  }, [id, dispatch]);
+
+  // Helper function to safely get error message
+  const getErrorMessage = (err) => {
+    if (!err) return null;
+    if (typeof err === 'string') return err;
+    if (err.message) return err.message;
+    if (err.error) return err.error;
+    return "An unexpected error occurred";
   };
 
-  const handleAcceptQuote = async (quotationId) => {
-    try {
-      setProcessingId(quotationId);
-      await axios.put(`/api/quotations/${quotationId}/accept`, {
-        status: 'accepted'
-      });
-      
-      setQuotations(prevQuotes =>
-        prevQuotes.map(quote =>
-          quote._id === quotationId
-            ? { ...quote, status: 'accepted' }
-            : quote
-        )
-      );
-      
-      alert('Quote accepted successfully!');
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to accept quote');
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  const handleRejectQuote = async (quotationId) => {
-    try {
-      setProcessingId(quotationId);
-      await axios.put(`/api/quotations/${quotationId}/reject`, {
-        status: 'rejected'
-      });
-      
-      setQuotations(prevQuotes =>
-        prevQuotes.map(quote =>
-          quote._id === quotationId
-            ? { ...quote, status: 'rejected' }
-            : quote
-        )
-      );
-      
-      alert('Quote rejected successfully!');
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to reject quote');
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  if (loading) {
+  // If no ID, show error
+  if (!id) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
-        <div className="text-center text-white">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
-          <p className="mt-4 text-lg">Loading RFQ details...</p>
+      <DashboardLayout>
+        <div className="min-h-screen py-8">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h2 className="text-red-600 text-xl font-bold mb-2">Error: No RFQ ID</h2>
+              <p className="text-red-500 mb-4">
+                Unable to find RFQ ID in the URL.
+              </p>
+              <button
+                onClick={() => navigate("/customer/rfqs")}
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+              >
+                Back to RFQs
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
-  if (error) {
+  // ================= LOADING =================
+  if (loading || quoteLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md text-center">
-          <div className="text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={() => navigate('/customer/rfqs')}
-            className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition"
-          >
-            Back to RFQs
-          </button>
+      <DashboardLayout>
+        <div className="min-h-screen py-8">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="text-center mt-10">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              <p className="mt-2 text-gray-600">Loading...</p>
+            </div>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
-  if (!rfq) {
+  // ================= ERROR =================
+  if (error || quoteError) {
+    const errorMessage = getErrorMessage(error) || getErrorMessage(quoteError) || "An error occurred";
+    
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">RFQ not found</h2>
-          <button
-            onClick={() => navigate('/customer/rfqs')}
-            className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition"
-          >
-            Back to RFQs
-          </button>
+      <DashboardLayout>
+        <div className="min-h-screen py-8">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h2 className="text-red-600 text-xl font-bold mb-2">Error Loading Data</h2>
+              <p className="text-red-500 mb-4">
+                {errorMessage}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    dispatch(getCusTomerRfqDetails(id));
+                    dispatch(getQuotationsByRfqThunk(id));
+                  }}
+                  className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition"
+                >
+                  Retry
+                </button>
+                <button
+                  onClick={() => navigate("/customer/rfqs")}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+                >
+                  Back to RFQs
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Check if RFQ exists
+  if (!loading && !customerRfqDetails) {
+    return (
+      <DashboardLayout>
+        <div className="min-h-screen py-8">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+              <h2 className="text-yellow-600 text-xl font-bold mb-2">RFQ Not Found</h2>
+              <p className="text-yellow-500 mb-4">
+                The requested RFQ could not be found.
+              </p>
+              <button
+                onClick={() => navigate("/customer/rfqs")}
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+              >
+                Back to RFQs
+              </button>
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 py-8">
-      <div className="container mx-auto px-4 max-w-6xl">
-        {/* Header with Back Button */}
-        <div className="mb-6">
-          <button
-            onClick={() => navigate('/customer/rfqs')}
-            className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg hover:bg-white/30 transition-all hover:translate-x-[-5px] inline-flex items-center gap-2"
-          >
-            ← Back to RFQs
-          </button>
-          <h1 className="text-3xl font-bold text-white mt-4">RFQ Details</h1>
-        </div>
-
-        {/* RFQ Details Card */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <div className="flex justify-between items-start border-b pb-4 mb-4">
-            <h2 className="text-2xl font-bold text-gray-800">
-              {rfq.title || 'Request for Quotation'}
-            </h2>
-            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-              rfq.status === 'open' ? 'bg-blue-100 text-blue-700' :
-              rfq.status === 'closed' ? 'bg-gray-100 text-gray-700' :
-              rfq.status === 'awarded' ? 'bg-green-100 text-green-700' :
-              'bg-yellow-100 text-yellow-700'
-            }`}>
-              {rfq.status || 'Open'}
-            </span>
+    <DashboardLayout>
+      <div className="min-h-screen py-8">
+        <div className="container mx-auto px-4 max-w-6xl">
+          {/* HEADER */}
+          <div className="mb-6">
+            <button
+              onClick={() => navigate("/customer/rfqs")}
+              className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition"
+            >
+              ← Back
+            </button>
+            <h1 className="text-3xl font-bold mt-4">
+              RFQ Details
+            </h1>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <div>
-              <label className="text-xs text-gray-500 uppercase font-semibold">RFQ ID</label>
-              <p className="text-gray-800 font-medium">{rfq.rfqNumber || rfq._id?.slice(-8)}</p>
+          {/* RFQ DETAILS */}
+          <div className="bg-white rounded-xl p-6 mb-8 shadow">
+            <div className="grid grid-cols-2 gap-4">
+              <p><b>ID:</b> {customerRfqDetails?._id || id}</p>
+              <p><b>Part Name:</b> {customerRfqDetails?.partName || 'N/A'}</p>
+              <p><b>Created:</b> {customerRfqDetails?.createdAt ? new Date(customerRfqDetails.createdAt).toLocaleDateString() : 'N/A'}</p>
+              <p><b>Deadline:</b> {customerRfqDetails?.deadline ? new Date(customerRfqDetails.deadline).toLocaleDateString() : 'N/A'}</p>
             </div>
-            <div>
-              <label className="text-xs text-gray-500 uppercase font-semibold">Created Date</label>
-              <p className="text-gray-800">{new Date(rfq.createdAt).toLocaleDateString()}</p>
+            <div className="mt-4">
+              <p><b>Description:</b> {customerRfqDetails?.description || 'No description'}</p>
             </div>
-            <div>
-              <label className="text-xs text-gray-500 uppercase font-semibold">Deadline</label>
-              <p className="text-gray-800">
-                {rfq.deadline ? new Date(rfq.deadline).toLocaleDateString() : 'Not specified'}
+          </div>
+
+          {/* QUOTATIONS */}
+          <h2 className="text-2xl font-bold mb-4">
+            Quotations
+          </h2>
+
+          {!vendorQuotations || vendorQuotations.length === 0 ? (
+            <div className="bg-gray-50 rounded-lg p-8 text-center">
+              <p className="text-gray-500">
+                No quotations found for this RFQ yet.
+              </p>
+              <p className="text-gray-400 text-sm mt-2">
+                When vendors submit quotations, they will appear here.
               </p>
             </div>
-            <div>
-              <label className="text-xs text-gray-500 uppercase font-semibold">Total Quotes</label>
-              <p className="text-2xl font-bold text-purple-600">{quotations.length}</p>
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <label className="text-xs text-gray-500 uppercase font-semibold block mb-2">Description</label>
-            <p className="text-gray-700 leading-relaxed">
-              {rfq.description || 'No description provided'}
-            </p>
-          </div>
-
-          {rfq.requirements && rfq.requirements.length > 0 && (
-            <div>
-              <label className="text-xs text-gray-500 uppercase font-semibold block mb-2">Requirements</label>
-              <ul className="list-disc list-inside space-y-1 text-gray-700">
-                {rfq.requirements.map((req, index) => (
-                  <li key={index}>{req}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        {/* Quotations Section */}
-        <div>
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-white">Quotations Received</h2>
-            <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-white font-semibold">
-              {quotations.length} Quotes
-            </span>
-          </div>
-
-          {quotations.length === 0 ? (
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-12 text-center text-white">
-              <p className="text-lg mb-2">No quotations received yet</p>
-              <p className="text-white/80">Check back later or share your RFQ with suppliers.</p>
-            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {quotations.map((quote) => (
+            <div className="grid md:grid-cols-2 gap-6">
+              {vendorQuotations.map((q) => (
                 <div
-                  key={quote._id}
-                  className={`bg-white rounded-xl shadow-lg overflow-hidden transition-all ${
-                    quote.status === 'accepted' ? 'ring-2 ring-green-500' :
-                    quote.status === 'rejected' ? 'ring-2 ring-red-500' :
-                    'hover:shadow-xl'
-                  }`}
+                  key={q._id}
+                  className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition"
                 >
-                  <div className="p-6">
-                    {/* Header */}
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-xl font-bold text-gray-800">
-                        {quote.supplierName || 'Supplier Quote'}
-                      </h3>
-                      {quote.status && (
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          quote.status === 'accepted' ? 'bg-green-100 text-green-700' :
-                          quote.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                          'bg-yellow-100 text-yellow-700'
-                        }`}>
-                          {quote.status}
-                        </span>
-                      )}
-                    </div>
+                  <h3 className="text-xl font-bold mb-2">
+                    {q.supplierName || "Supplier"}
+                  </h3>
 
-                    {/* Details */}
-                    <div className="space-y-3 mb-4">
-                      <div className="flex justify-between items-center pb-2 border-b">
-                        <span className="text-gray-600">Total Amount:</span>
-                        <span className="text-2xl font-bold text-purple-600">
-                          ${quote.totalAmount?.toLocaleString() || 'N/A'}
-                        </span>
-                      </div>
+                  <p className="text-purple-600 text-2xl font-bold mb-3">
+                    ${q.totalAmount?.toLocaleString() || '0'}
+                  </p>
 
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Delivery Time:</span>
-                        <span className="text-gray-800 font-medium">
-                          {quote.deliveryTime || 'Not specified'}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Valid Until:</span>
-                        <span className="text-gray-800">
-                          {quote.validUntil ? new Date(quote.validUntil).toLocaleDateString() : 'Not specified'}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Payment Terms:</span>
-                        <span className="text-gray-800">{quote.paymentTerms || 'Not specified'}</span>
-                      </div>
-                    </div>
-
-                    {/* Items */}
-                    {quote.items && quote.items.length > 0 && (
-                      <div className="mb-4">
-                        <label className="text-xs text-gray-500 uppercase font-semibold block mb-2">
-                          Items Included
-                        </label>
-                        <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-                          {quote.items.map((item, idx) => (
-                            <div key={idx} className="flex justify-between text-sm">
-                              <span className="text-gray-700">
-                                {item.name} x {item.quantity}
-                              </span>
-                              <span className="font-medium text-gray-800">
-                                ${item.total?.toLocaleString()}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Notes */}
-                    {quote.notes && (
-                      <div className="mb-4">
-                        <label className="text-xs text-gray-500 uppercase font-semibold block mb-1">
-                          Additional Notes
-                        </label>
-                        <p className="text-gray-600 text-sm bg-gray-50 p-2 rounded">
-                          {quote.notes}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Actions */}
-                    {(!quote.status || quote.status === 'pending') && (
-                      <div className="flex gap-3 mt-6">
-                        <button
-                          onClick={() => handleAcceptQuote(quote._id)}
-                          disabled={processingId === quote._id}
-                          className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-                        >
-                          {processingId === quote._id ? 'Processing...' : '✓ Accept Quote'}
-                        </button>
-                        <button
-                          onClick={() => handleRejectQuote(quote._id)}
-                          disabled={processingId === quote._id}
-                          className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-                        >
-                          {processingId === quote._id ? 'Processing...' : '✗ Reject Quote'}
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Status Badges */}
-                    {quote.status === 'accepted' && (
-                      <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-                        <p className="text-green-700 font-semibold">
-                          ✓ Quote Accepted - Supplier will contact you soon
-                        </p>
-                      </div>
-                    )}
-
-                    {quote.status === 'rejected' && (
-                      <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-3 text-center">
-                        <p className="text-red-700 font-semibold">
-                          ✗ Quote Rejected
-                        </p>
-                      </div>
-                    )}
+                  <div className="space-y-1 text-gray-600">
+                    <p>Delivery: {q.deliveryTime || 'N/A'}</p>
+                    <p>Payment Terms: {q.paymentTerms || 'N/A'}</p>
                   </div>
+
+                  {/* ITEMS */}
+                  {q.items && Array.isArray(q.items) && q.items.length > 0 && (
+                    <div className="mt-4 pt-3 border-t">
+                      <p className="font-semibold mb-2">Items:</p>
+                      <div className="space-y-1">
+                        {q.items.map((item, i) => (
+                          <div
+                            key={i}
+                            className="flex justify-between text-sm"
+                          >
+                            <span>
+                              {item.name || 'Item'} x {item.quantity || 0}
+                            </span>
+                            <span className="font-medium">
+                              ${item.total?.toLocaleString() || '0'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           )}
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

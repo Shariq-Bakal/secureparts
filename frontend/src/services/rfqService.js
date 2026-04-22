@@ -84,3 +84,27 @@ export const getCustomerRfqs = async (page, limit) => {
 
   return response.data; // ✅ IMPORTANT
 };
+
+//get customer rfq details
+export const getCustomerRfqDetails = async (id) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No auth token found");
+
+    const response = await api.get(`/rfq/customer-rfq-details/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data.customerRfqDetails;
+
+  } catch (error) {
+    console.error("Error fetching RFQ details:", error);
+
+    // Return a consistent error object
+    return Promise.reject(
+  error.response?.data?.message || error.message || "Failed to fetch RFQ details"
+);
+  }
+};

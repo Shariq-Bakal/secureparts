@@ -283,3 +283,47 @@ export const getVendorQuotations = async (req, res) => {
         });
     }
 };
+
+
+//get quotations by vendor so that customer can accept or reject
+
+export const getQuotationsByRfq = async (req, res) => {
+  try {
+    const { rfqId } = req.params;
+
+    // 🔐 Security check
+    const rfq = await RFQ.findById(rfqId);
+
+    if (!rfq) {
+      return res.status(404).json({
+        success: false,
+        message: "RFQ not found"
+      });
+    }
+
+    // Only owner can view
+    if (rfq.createdBy.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized"
+      });
+    }
+
+    // ✅ Get quotations for THIS RFQ ONLY
+    const quotations = await Quotation.find({ rfq: rfqId })
+      .sort({ createdAt: -1 })
+      .populate("vendor", "name email") // optional
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      quotations
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};

@@ -38,3 +38,27 @@ export const getCustomerQuotations = async (page = 1, limit = 10) => {
         throw error; // Rethrow so your Redux thunk can catch it
     }
 }
+
+
+
+export const getQuotationsByRfq = async (rfqId) => {
+  if (!rfqId) {
+    throw new Error('RFQ ID is required');
+  }
+  console.log('RFQ ID from URL:', rfqId);
+  try {
+    // The token should be automatically added by your axios interceptor
+    // But if not, you need to add it manually
+    const token = localStorage.getItem('token'); // or wherever you store it
+    
+    const response = await api.get(`/quotations/rfq/${rfqId}/vendor-quotations`, {
+      headers: {
+        'Authorization': `Bearer ${token}`  // ← Add token to headers
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch quotations:', error);
+    throw error;
+  }
+};

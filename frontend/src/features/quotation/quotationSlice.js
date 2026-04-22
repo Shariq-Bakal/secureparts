@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
-import { submitQuotation,getCustomerQuotations } from "../../services/quotationService"
+import { submitQuotation,getCustomerQuotations,getQuotationsByRfq } from "../../services/quotationService"
 
 // ==========================
 // ASYNC THUNKS
@@ -36,14 +36,27 @@ export const getCusTomerQuotations = createAsyncThunk(
     }
   }
 )
-
+export const getQuotationsByRfqThunk = createAsyncThunk(
+  "quotations/getQuotationsByRfq",
+  async (id, thunkAPI) => {  // ✅ Receive as object
+    try {
+      const response = await getQuotationsByRfq(id)
+      return response
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data || error.message
+      )
+    }
+  }
+)
 
 
 const initialState = {
   loading: false,
   error: null,
   quotation: [], // all quotations
-  customerQuotations:[]
+  customerQuotations:[],
+  vendorQuotations:[]
 }
 
 const quotationSlice = createSlice({
@@ -78,6 +91,19 @@ const quotationSlice = createSlice({
         state.customerQuotations.push(action.payload)
       })
       .addCase(getCusTomerQuotations.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+      })
+      //get vendor quotation so that customer can reject or accept
+      .addCase(getQuotationsByRfqThunk.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(getQuotationsByRfqThunk.fulfilled, (state, action) => {
+        state.loading = false
+        state.vendorQuotations = action.payload.quotations || [];
+      })
+      .addCase(getQuotationsByRfqThunk.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload
       })
