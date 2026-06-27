@@ -108,7 +108,6 @@ export const approveVendor = async (req, res) => {
 export const rejectVendor = async(req,res)=>{
      try {
         if (req.user.role !== "admin") {
-            console.log("❌ Unauthorized Access Attempt");
             return res.status(403).json({
                 success: false,
                 message: "Only Admin can reject vendors"
@@ -249,7 +248,6 @@ export const getRecentRFQS = async (req, res) => {
         }
 
         const skip = (page - 1) * limit
-        console.log(page)
 
         const recentRFQS = await RFQ
             .find()
@@ -305,7 +303,6 @@ export const getRecentQuotations = async (req,res)=>{
 
     }
     catch(error){
-        console.log(error.message);
         return res.status(500).json({
             success:false,
             message:"Internal Server error"
@@ -351,6 +348,7 @@ export const getAllUsers = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
+      .select("-password")
       .lean()
 
 
@@ -423,7 +421,6 @@ export const getAllRFQS = async (req, res) => {
         });
 
     } catch (error) {
-        console.log(error.message);
         return res.status(500).json({
             success: false,
             message: "Internal Server Error"

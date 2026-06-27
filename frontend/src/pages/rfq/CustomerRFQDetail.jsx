@@ -2,6 +2,8 @@ import React, { useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import DashboardLayout from "../../layouts/DashboardLayout";
+import {createColumnHelper, flexRender, getCoreRowModel, useReactTable} from "@tanstack/react-table"
+import { tableWrapperClass,headerClass, thClass, tdClass, rowClass } from "../../components/table/TableStyle"
 
 import {
   getCusTomerRfqDetails
@@ -12,6 +14,7 @@ import {
 } from "../../features/quotation/quotationSlice";
 
 const CustomerRFQDetail = () => {
+  
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const location = useLocation();

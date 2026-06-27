@@ -290,16 +290,16 @@ const Home = () => {
             <p className="text-sm text-gray-500 mb-6">Choose your role to get started</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => navigate("/register?role=customer")}
+                onClick={() => navigate("/register")}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
               >
-                Register as Customer
+                Register
               </button>
               <button
-                onClick={() => navigate("/register?role=vendor")}
+                onClick={() => navigate("/login")}
                 className="px-6 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition font-semibold"
               >
-                Register as Vendor
+               Login
               </button>
             </div>
             <button

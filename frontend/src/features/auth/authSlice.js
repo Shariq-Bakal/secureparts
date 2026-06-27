@@ -1,7 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
-import { loginUser, registerUser } from "../../services/authService"
+import { loginUser, registerUser,logoutUser } from "../../services/authService"
 
+//logout thunk
 
+export const logout = createAsyncThunk('auth/logout', async (_, thunkAPI) => {
+    try {
+        const response = await logoutUser(); // Your perfect function!
+        return response?.data || response;
+    } catch (error) {
+        return thunkAPI.rejectWithValue(error.message);
+    }
+});
 // ============================
 // REGISTER THUNK
 // ============================
@@ -50,6 +59,9 @@ export const login = createAsyncThunk(
 )
 
 
+
+
+
 // ============================
 // LOAD DATA FROM LOCAL STORAGE
 // ============================
@@ -84,22 +96,34 @@ const authSlice = createSlice({
 
   reducers: {
 
-    logout: (state) => {
-
-      state.user = null
-      state.token = null
-
-      localStorage.removeItem("token")
-      localStorage.removeItem("user")
-
-    }
-
   },
 
 
   extraReducers: (builder) => {
 
     builder
+      //logout
+      .addCase(logout.pending, (state) => {
+
+        state.loading = true
+        state.error = null
+
+      })
+      .addCase(logout.fulfilled, (state) => {
+    state.loading = false;
+    state.user = null;
+    state.token = null;
+
+    // Destroy the frontend memory
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    })
+    .addCase(logout.rejected, (state, action) => {
+
+        state.loading = false
+        state.error = action.payload
+
+      })
 
       // =========================
       // LOGIN
@@ -167,6 +191,6 @@ const authSlice = createSlice({
 // EXPORTS
 // ============================
 
-export const { logout } = authSlice.actions
+// export const { logout } = authSlice.actions
 
 export default authSlice.reducer

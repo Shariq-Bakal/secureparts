@@ -30,7 +30,7 @@ const RfqDetails = () => {
     useEffect(() => {
         dispatch(getOpenRfqsDetail(id))   
     }, [dispatch, id])
-    const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
   e.preventDefault()
   
   if (!id) {
@@ -41,20 +41,12 @@ const RfqDetails = () => {
   setIsSubmitting(true)
   
   try {
-    console.log("Dispatching with ID:", id)
-    console.log("Dispatching with data:", quotationData)
     
     // ✅ Pass as object matching the thunk expectation
     const result = await dispatch(submiTQuotation({ 
       data: quotationData, 
       id: id 
-    }))
-    
-    if (result.error) {
-      throw new Error(result.error)
-    }
-    
-    console.log("Success result:", result)
+    })).unwrap(); 
     alert('Quotation submitted successfully!')
     
     // Optional: Reset form
@@ -65,8 +57,8 @@ const RfqDetails = () => {
     })
     
   } catch (error) {
-    console.log('Submission error:', error)
-    alert('Failed to submit quotation. Please try again.')
+    console.log(error)
+    alert(error.message)
   } finally {
     setIsSubmitting(false)
   }
@@ -120,7 +112,7 @@ const RfqDetails = () => {
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                 </svg>
                                                 <span className="text-sm text-gray-900">{openRfqDetails?.deadline}</span>
-                                                <span className="text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">12 days left</span>
+
                                             </div>
                                         </dd>
                                     </div>

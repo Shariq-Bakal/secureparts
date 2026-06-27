@@ -42,6 +42,18 @@ export const submitQuotation = async (req, res) => {
                 message: "RFQ is closed. You cannot quote now."
             });
         }
+        if (rfq.deadline && new Date() > new Date(rfq.deadline)) {
+            
+            // Optional but recommended: Auto-close it in the database 
+            // so frontend knows not to show it as "open" anymore
+            rfq.status = "closed";
+            await rfq.save();
+
+            return res.status(400).json({
+                success: false,
+                message: "The deadline for this RFQ has expired."
+            });
+        }
 
         // 🔁 STEP 6: Check if Vendor Already Quoted
         const existingQuotation = await Quotation.findOne({
@@ -134,9 +146,10 @@ export const getAllQuotations = async (req, res) => {
             .lean();
 
         if (!quotations || quotations.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Currently there are no quotations"
+            return res.status(200).json({
+                success: true,
+                quotations: [],
+                message: "No quotations found"
             });
         }
 
@@ -202,9 +215,10 @@ export const getCustomerQuotations = async (req, res) => {
     .lean();
 
         if (!quotations || quotations.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Currently there are no quotations"
+            return res.status(200).json({
+                success: true,
+                quotations: [],
+                message: "No quotations found"
             });
         }
 
@@ -264,10 +278,11 @@ export const getVendorQuotations = async (req, res) => {
     .populate("rfq") // optional (very useful for frontend)
     .lean();
 
-        if (quotations.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Currently there are no quotations"
+        if (!quotations || quotations.length === 0) {
+            return res.status(200).json({
+                success: true,
+                quotations: [],
+                message: "No quotations found"
             });
         }
 

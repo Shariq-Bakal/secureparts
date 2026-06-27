@@ -7,17 +7,14 @@ import { generateAccessToken, generateRefreshToken } from "../../utils/generateT
 export const registerUser = async (req,res)=>{
     try{
         const {name,email,password,role} = req.body;
-        console.log("Incoming Role:", role);
+        const SELF_REGISTER_ROLES = ["customer", "vendor"];
+        const safeRole = SELF_REGISTER_ROLES.includes(role) ? role : "customer";
+
         const userExists = await User.findOne({email});
         if(userExists){
             return res.status(400).json({message:"User already exits"});
         }
-        const user = await User.create({
-            name,
-            email,
-            password,
-            role
-        })
+        const user = await User.create({ name, email, password, role: safeRole })
         res.status(201).json({
             user:user,
             message:"User created successfully"
@@ -33,7 +30,7 @@ export const loginUser = async (req,res)=>{
         const {email,password} = req.body;
 
         if(!email || !password){
-            res.status(404).json({message:"All fields required"})
+            return res.status(400).json({ message: "All fields required" });
         }
 
         const user = await User.findOne({email});
@@ -57,6 +54,13 @@ export const loginUser = async (req,res)=>{
 
         user.refreshToken = refreshToken;
         await user.save();
+        // 1. Set the Refresh Token in an httpOnly cookie
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true, // JavaScript cannot read this
+            secure: process.env.NODE_ENV === 'production', // Use HTTPS in production
+            sameSite: 'strict', // Protects against CSRF
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
+        });
         let responseUser = {
             id: user._id,
             name: user.name,
@@ -97,32 +101,88 @@ export const loginUser = async (req,res)=>{
 
 //Goal: Remove refresh token so the user cannot generate new access tokens anymore.
 
+// export const logoutUser = async (req, res) => {
+//     try {
+//         // const { refreshToken } = req.body;
+//         // console.log(refreshToken,"Refresh token")
+//         const refreshToken = req.cookies?.refreshToken;
+
+//         // 1. If no token is sent, don't throw an error. Tell the frontend to proceed.
+//         if (!refreshToken) {
+//             return res.status(200).json({ message: "No token provided, logged out successfully" });
+//         }
+        
+
+//         // 2. Find user with this refresh token
+//         const user = await User.findOne({ refreshToken });
+
+//         // 3. If user isn't found (e.g., token already deleted or invalid), 
+//         // still return success so the frontend clears its local storage.
+//         if (!user) {
+//             return res.status(200).json({ message: "Logged out successfully" });
+//         }
+
+//         // 4. Remove refresh token from DB
+//         user.refreshToken = null; 
+//         // Note: If you want to allow logins on multiple devices later, 
+//         // change this to an array filter: user.refreshTokens = user.refreshTokens.filter(t => t !== refreshToken);
+        
+//         await user.save();
+
+//         return res.status(200).json({ message: "Logout successful" });
+        
+//     } catch (err) {
+//         console.error("Logout Error:", err.message);
+//         return res.status(500).json({ message: "Internal server error" });
+//     }
+// };
+
 export const logoutUser = async (req, res) => {
     try {
-        const { refreshToken } = req.body;
+        // 1. Grab the token directly from the cookie
+        const refreshToken = req.cookies?.refreshToken;
 
-        if (!refreshToken) return res.status(400).json({ message: "Refresh token required" });
+        // 2. Standardize the cookie clearing options
+        const cookieOptions = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        };
 
-        // Find user with this refresh token
+        // 3. If no token is provided, just clear cookies and exit gracefully
+        if (!refreshToken) {
+            res.clearCookie("refreshToken", cookieOptions);
+            return res.status(200).json({ message: "No token provided, logged out successfully" });
+        }
+
+        // 4. Find user with this token
         const user = await User.findOne({ refreshToken });
-        if (!user) return res.status(400).json({ message: "Invalid refresh token" });
 
-        // Remove refresh token from DB
+        // 5. If user isn't found (token already deleted), still clear cookie
+        if (!user) {
+            res.clearCookie("refreshToken", cookieOptions);
+            return res.status(200).json({ message: "Logged out successfully" });
+        }
+
+        // 6. Remove refresh token from DB
         user.refreshToken = null;
         await user.save();
 
-        res.status(200).json({ message: "Logout successful" });
+        // 7. Clear the cookie in the browser
+        res.clearCookie("refreshToken", cookieOptions);
+
+        return res.status(200).json({ message: "Finally Logout successful" });
+        
     } catch (err) {
-        console.log(err.message);
-        res.status(500).json({ message: "Internal server error" });
+        console.error("Logout Error:", err.message);
+        return res.status(500).json({ message: "Internal server error" });
     }
 };
-
 // Goal: When access token expires, user can get a new access token using refresh token, without logging in again.
 
 export const refreshToken = async (req, res) => {
     try {
-        const { token } = req.body; // refresh token from frontend
+        const { token } = req.body; // refresh token from frontend;
         if (!token) return res.status(400).json({ message: "Refresh token required" });
 
         // Find user with this refresh token

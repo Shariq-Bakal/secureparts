@@ -41,13 +41,12 @@ export const createRFQ = async (req,res)=>{
     }
 }
 //My rfqs
+
 export const getMyRfqs = async (req, res) => {
   try {
     // Default values
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 5;
-    console.log("PAGE:", req.query.page);
-    console.log("LIMIT:", req.query.limit);
 
     // Validation
     if (Number.isNaN(page) || Number.isNaN(limit)) {
@@ -144,8 +143,6 @@ export const getMyRfqs = async (req, res) => {
 };
 
 export const getOpenRFQ = async (req, res) => {
-  console.log(req.user, "USER")
-
   try {
     // ✅ Default page = 1 if not provided
     const page = Number(req.query.page) || 1
@@ -171,14 +168,20 @@ export const getOpenRFQ = async (req, res) => {
 
     // ✅ Run queries in parallel (optimized)
     const [openRfqs, total] = await Promise.all([
-      RFQ.find({ status: "open" }) // ✅ filter applied
+      RFQ.find({ 
+          status: "open", 
+          deadline: { $gt: new Date() } // 👈 NEW: Only fetch if deadline is Greater Than (gt) Right Now
+      })
         .populate("createdBy", "name")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
 
-      RFQ.countDocuments({ status: "open" }) // ✅ FIXED (only open RFQs)
+      RFQ.countDocuments({ 
+          status: "open",
+          deadline: { $gt: new Date() } // 👈 NEW: Must match the find query above
+      })
     ])
 
     const totalPages = Math.ceil(total / limit)
@@ -222,7 +225,7 @@ export const getOpenRFQ = async (req, res) => {
 export const getAllRfq = async (req, res) => {
   try {
 
-    const page = Number(req.query.page);
+    const page = Number(req.query.page) || 1;
 
     if (Number.isNaN(page)) {
       return res.status(400).json({
@@ -252,8 +255,6 @@ export const getAllRfq = async (req, res) => {
     ]);
 
     const totalPages = Math.ceil(total / limit);
-    console.log(rfqs)
-
     return res.status(200).json({
       success: true,
       data: rfqs,
@@ -296,6 +297,11 @@ export const getRfqDetails = async(req,res)=>{
       });
     }
     const rfqDetails = await RFQ.findById(id)
+    // ⏰ NEW: Expiration Check
+    if (rfqDetails.status === "open" && rfqDetails.deadline && new Date() > new Date(rfqDetails.deadline)) {
+        rfqDetails.status = "closed";
+        await rfqDetails.save();
+    }
     if (!rfqDetails) {
       return res.status(404).json({
         success: false,
@@ -337,6 +343,11 @@ export const getCustomerRfqDetails = async(req,res)=>{
   _id: id,
   createdBy: req.user._id
 });
+   // ⏰ NEW: Expiration Check
+    if (customerRfqDetails.status === "open" && customerRfqDetails.deadline && new Date() > new Date(customerRfqDetails.deadline)) {
+        customerRfqDetails.status = "closed";
+        await customerRfqDetails.save();
+    }
     if (!customerRfqDetails) {
       return res.status(404).json({
         success: false,

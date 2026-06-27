@@ -27,7 +27,6 @@ export const verifyAccessToken= async (req, res, next) => {
         if (!user) {
             return res.status(401).json({ message: "User not found" });
         }
-        console.log(user,"User")
 
         // decoded now contains:
         // { id: "...", role: "admin" }
@@ -51,7 +50,6 @@ export const verifyAccessToken= async (req, res, next) => {
 export const verifyRole = (requiredRole) => {
  
    return (req, res, next) => {
-    console.log(req.user.role,"role")
 
       if (req.user.role !== requiredRole) {
          return res.status(403).json({
