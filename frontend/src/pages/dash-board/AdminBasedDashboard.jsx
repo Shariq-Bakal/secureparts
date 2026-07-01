@@ -32,6 +32,7 @@ const AdminDashboard = () => {
   }, []);
 
   useEffect(() => {
+    console.log("RAW WS MESSAGE:", event.data);
     const handleMessage = (event) => {
       const data = JSON.parse(event.data);
 
