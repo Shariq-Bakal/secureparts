@@ -1,7 +1,8 @@
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
-
+import http from "http"
+import { initWebsocket } from "./websocket/wsServer.js";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import cors from "cors";
@@ -18,6 +19,7 @@ import quotationRoutes from "./routes/quotationRoutes.js";
 
 
 const app = express();
+const server = http.createServer(app);
 const port = process.env.PORT || 5000;
 
 // 1. TOP-LEVEL MIDDLEWARE (Security & Logging)
@@ -65,8 +67,9 @@ app.use((err, req, res, next) => {
         stack: process.env.NODE_ENV === 'production' ? null : err.stack,
     });
 });
-
+//web socket
+initWebsocket(server);
 // 6. START SERVER
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${port}`);
 });

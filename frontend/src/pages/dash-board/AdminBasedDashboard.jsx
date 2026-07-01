@@ -2,6 +2,8 @@ import DashboardLayout from "../../layouts/DashboardLayout"
 import UsersTable from "../../components/AdminTables/UserTable"
 import VendorTable from "../../components/AdminTables/VendorTable"
 import RFQTable from "../../components/AdminTables/RFQTable"
+import socket from "../../sockets/socket.js"
+import { useEffect } from "react"
 import { useNavigate, useParams, useLocation } from "react-router-dom"
 
 const AdminDashboard = () => {
@@ -13,6 +15,36 @@ const AdminDashboard = () => {
   console.log("tab:", tab)
 
   const activeTab = tab || "users"
+   useEffect(() => {
+    const registerAdmin = () => {
+      socket.send(
+        JSON.stringify({
+          role: "admin"
+        })
+      );
+    };
+
+    if (socket.readyState === WebSocket.OPEN) {
+      registerAdmin();
+    } else {
+      socket.onopen = registerAdmin;
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleMessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      alert(data.message);
+    };
+
+    socket.addEventListener("message", handleMessage);
+
+    return () => {
+      socket.removeEventListener("message", handleMessage);
+    };
+  }, []);
+
 
   return (
     <DashboardLayout>

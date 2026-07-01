@@ -2,7 +2,7 @@ import User from "../../models/UserModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { generateAccessToken, generateRefreshToken } from "../../utils/generateToken.js";
-
+import { notifyAdmin } from "../../websocket/wsServer.js";
 
 export const registerUser = async (req,res)=>{
     try{
@@ -15,6 +15,12 @@ export const registerUser = async (req,res)=>{
             return res.status(400).json({message:"User already exits"});
         }
         const user = await User.create({ name, email, password, role: safeRole })
+        notifyAdmin({
+            type: "NEW_USER",
+            message: role === "vendor" 
+        ? "Vendor registered. Please approve them." 
+        : "Customer registered."
+        });
         res.status(201).json({
             user:user,
             message:"User created successfully"
