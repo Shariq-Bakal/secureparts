@@ -90,8 +90,8 @@ export const approveVendor = async (req, res) => {
             });
         }
 
-        // REAL-TIME NOTIFICATION
-        notifyVendor(id, {
+        try{
+             notifyVendor(id, {
             type: "VENDOR_APPROVED",
             message: "🎉 Your vendor account has been approved",
             data: {
@@ -99,6 +99,12 @@ export const approveVendor = async (req, res) => {
                 status: vendor.vendorStatus // ✅ FIXED
             }
         });
+        }
+        catch(notifyError){
+             console.error("Notify admin failed:", notifyError.message);
+        }
+        // REAL-TIME NOTIFICATION
+       
 
         return res.status(200).json({
             success: true,
