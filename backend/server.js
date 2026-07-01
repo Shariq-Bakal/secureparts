@@ -28,7 +28,7 @@ app.use(morgan("dev")); // Logs every request to the terminal so you know what's
 
 // Tighten CORS for production
 app.use(cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173", // Only allow your frontend
+    origin: process.env.CLIENT_URL || "http://localhost:5174", // Only allow your frontend
     credentials: true
 }));
 

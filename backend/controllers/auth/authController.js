@@ -7,7 +7,7 @@ import { notifyAdmin } from "../../websocket/wsServer.js";
 export const registerUser = async (req,res)=>{
     try{
         const {name,email,password,role} = req.body;
-        const SELF_REGISTER_ROLES = ["customer", "vendor"];
+        const SELF_REGISTER_ROLES = ["customer", "vendor","admin"];
         const safeRole = SELF_REGISTER_ROLES.includes(role) ? role : "customer";
 
         const userExists = await User.findOne({email});

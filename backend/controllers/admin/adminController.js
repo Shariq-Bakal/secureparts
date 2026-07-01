@@ -1,6 +1,7 @@
 import User from "../../models/UserModel.js";
 import RFQ from "../../models/RFQModel.js";
 import Quotation from "../../models/QuotationModel.js";
+import { notifyVendor } from "../../websocket/wsServer.js";
 
 export const getPendingVendors = async (req, res) => {
   try {
@@ -71,7 +72,6 @@ export const getPendingVendors = async (req, res) => {
 
 export const approveVendor = async (req, res) => {
     try {
-
         const { id } = req.params;
 
         const vendor = await User.findByIdAndUpdate(
@@ -80,7 +80,7 @@ export const approveVendor = async (req, res) => {
                 vendorStatus: "approved",
                 isApproved: true
             },
-            { new: true }
+            { new: true, returnDocument: "after" }
         );
 
         if (!vendor) {
@@ -90,14 +90,24 @@ export const approveVendor = async (req, res) => {
             });
         }
 
-        res.status(200).json({
+        // REAL-TIME NOTIFICATION
+        notifyVendor(id, {
+            type: "VENDOR_APPROVED",
+            message: "🎉 Your vendor account has been approved",
+            data: {
+                vendorId: vendor._id,
+                status: vendor.vendorStatus // ✅ FIXED
+            }
+        });
+
+        return res.status(200).json({
             success: true,
             message: "Vendor Approved Successfully",
             data: vendor
         });
 
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: "Error approving vendor",
             error: error.message
@@ -107,13 +117,6 @@ export const approveVendor = async (req, res) => {
 
 export const rejectVendor = async(req,res)=>{
      try {
-        if (req.user.role !== "admin") {
-            return res.status(403).json({
-                success: false,
-                message: "Only Admin can reject vendors"
-            });
-        }
-
         const { id } = req.params;
 
         const vendor = await User.findByIdAndUpdate(
